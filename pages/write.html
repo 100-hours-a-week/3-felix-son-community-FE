@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글쓰기 - 커뮤니티</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* contenteditable 에디터 스타일 */
+        .rich-editor {
+            min-height: 400px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #333;
+            outline: none;
+        }
+
+        .rich-editor:focus {
+            border-color: #2196F3;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+        }
+
+        /* placeholder 스타일 */
+        .rich-editor:empty:before {
+            content: attr(data-placeholder);
+            color: #999;
+            cursor: text;
+        }
+
+        /* 에디터 내부 이미지 스타일 */
+        .rich-editor img {
+            max-width: 100%;
+            height: auto;
+            margin: 10px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            display: block;
+            cursor: pointer;
+        }
+
+        .rich-editor img:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        /* 에디터 툴바 */
+        .editor-toolbar {
+            margin-top: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        <div class="container">
+            <div class="write-container">
+                <h2 id="pageTitle">게시글 작성</h2>
+                <form id="writeForm" class="write-form">
+                    <div class="form-group">
+                        <label for="postTitle">제목</label>
+                        <input type="text" id="postTitle" required placeholder="제목을 입력하세요">
+                    </div>
+                    <div class="form-group">
+                        <label for="postContent">내용</label>
+                        <div class="content-editor-wrapper">
+                            <div 
+                                id="postContent" 
+                                class="rich-editor"
+                                contenteditable="true" 
+                                data-placeholder="내용을 입력하세요. 이미지를 삽입하려면 아래 버튼을 클릭하세요.">
+                            </div>
+                            <div class="editor-toolbar">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="triggerImageUpload()">
+                                    📷 이미지 삽입
+                                </button>
+                                <input 
+                                    type="file" 
+                                    id="imageInput" 
+                                    accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
+                                    multiple
+                                    style="display: none;"
+                                    onchange="handleImageSelection(event)">
+                                <small style="color: #666; margin-left: 1rem;">
+                                    이미지는 커서 위치에 삽입됩니다 (최대 5개, 각 5MB)
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="goBack()">취소</button>
+                        <button type="submit" class="btn btn-primary" id="submitBtn">등록</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/layout.js"></script>
+    <script>
+        let editMode = false;
+        let editPostId = null;
+        let originalPost = null;
+        let pendingImageFiles = [];
+        let imageCounter = 0;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            authManager.updateUI();
+
+            if (!authManager.isLoggedIn()) {
+                showError('로그인이 필요합니다.');
+                window.location.href = '/login';
+                return;
+            }
+
+            const urlParams = new URLSearchParams(window.location.search);
+            editPostId = urlParams.get('id');
+
+            if (editPostId) {
+                editMode = true;
+                document.getElementById('pageTitle').textContent = '게시글 수정';
+                document.getElementById('submitBtn').textContent = '수정';
+                await loadPostForEdit(editPostId);
+            }
+
+            setupForm();
+        });
+
+        async function loadPostForEdit(postId) {
+            try {
+                const post = await api.getPost(postId);
+                originalPost = post;
+                
+                const currentUser = authManager.getCurrentUser();
+                const isAuthor = currentUser && 
+                    (currentUser.userId === post.user.userId || 
+                     currentUser.nickname === post.user.nickname);
+                
+                if (!isAuthor) {
+                    showError('게시글 작성자만 수정할 수 있습니다.');
+                    window.location.href = `/posts/${postId}`;
+                    return;
+                }
+                
+                document.getElementById('postTitle').value = post.title;
+                
+                // 마크다운을 HTML로 변환하여 에디터에 표시
+                const editor = document.getElementById('postContent');
+                editor.innerHTML = convertMarkdownToHtml(post.body || '');
+                
+            } catch (error) {
+                console.error('게시글 로드 실패:', error);
+                showError('게시글을 불러오는데 실패했습니다.');
+                window.location.href = '/posts';
+            }
+        }
+
+        // 마크다운을 HTML로 변환 (에디터 표시용)
+        function convertMarkdownToHtml(markdown) {
+            let html = markdown.replace(/!\[(.*?)\]\((.*?)\)/g, (match, alt, url) => {
+                return `<img src="${url}" alt="${escapeHtml(alt)}" data-image-url="${url}">`;
+            });
+            html = html.replace(/\n/g, '<br>');
+            return html;
+        }
+
+        // 이미지 선택 트리거
+        function triggerImageUpload() {
+            document.getElementById('imageInput').click();
+        }
+
+        // 이미지 파일 선택 처리
+        function handleImageSelection(event) {
+            const files = Array.from(event.target.files);
+            const editor = document.getElementById('postContent');
+            
+            if (pendingImageFiles.length + files.length > 5) {
+                showError('이미지는 최대 5개까지 업로드 가능합니다.');
+                return;
+            }
+            
+            for (const file of files) {
+                if (!validateImageFile(file)) {
+                    continue;
+                }
+                
+                const tempId = `TEMP_IMAGE_${imageCounter++}`;
+                pendingImageFiles.push({ id: tempId, file: file });
+                
+                const tempUrl = URL.createObjectURL(file);
+                
+                const img = document.createElement('img');
+                img.src = tempUrl;
+                img.alt = file.name;
+                img.dataset.tempId = tempId;
+                
+                insertImageAtCursor(img);
+                
+                const br = document.createElement('br');
+                insertImageAtCursor(br);
+            }
+            
+            event.target.value = '';
+        }
+
+        // 커서 위치에 요소 삽입
+        function insertImageAtCursor(element) {
+            const selection = window.getSelection();
+            if (selection.rangeCount > 0) {
+                const range = selection.getRangeAt(0);
+                range.deleteContents();
+                range.insertNode(element);
+                
+                range.setStartAfter(element);
+                range.setEndAfter(element);
+                selection.removeAllRanges();
+                selection.addRange(range);
+            } else {
+                document.getElementById('postContent').appendChild(element);
+            }
+        }
+
+        // 이미지 파일 유효성 검사
+        function validateImageFile(file) {
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+            
+            if (!validTypes.includes(file.type)) {
+                showError('PNG, JPG, GIF, WEBP 형식의 이미지만 업로드 가능합니다.');
+                return false;
+            }
+            
+            if (file.size > 5 * 1024 * 1024) {
+                showError('이미지 크기는 5MB 이하여야 합니다.');
+                return false;
+            }
+            
+            return true;
+        }
+
+        // HTML을 마크다운으로 변환
+        function convertHtmlToMarkdown(html) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = html;
+            
+            let markdown = '';
+            
+            function processNode(node) {
+                if (node.nodeType === Node.TEXT_NODE) {
+                    markdown += node.textContent;
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                    if (node.tagName === 'IMG') {
+                        const alt = node.getAttribute('alt') || '이미지';
+                        const tempId = node.dataset.tempId;
+                        if (tempId) {
+                            markdown += `![${alt}](${tempId})`;
+                        } else {
+                            const src = node.getAttribute('src');
+                            markdown += `![${alt}](${src})`;
+                        }
+                        markdown += '\n';
+                    } else if (node.tagName === 'BR') {
+                        markdown += '\n';
+                    } else if (node.tagName === 'DIV' || node.tagName === 'P') {
+                        Array.from(node.childNodes).forEach(processNode);
+                        markdown += '\n';
+                    } else {
+                        Array.from(node.childNodes).forEach(processNode);
+                    }
+                }
+            }
+            
+            Array.from(tempDiv.childNodes).forEach(processNode);
+            return markdown.trim();
+        }
+
+        // 에디터 내용을 마크다운으로 가져오기
+        function getEditorContent() {
+            const editor = document.getElementById('postContent');
+            return convertHtmlToMarkdown(editor.innerHTML);
+        }
+
+        // 이미지 업로드
+        async function uploadPendingImages() {
+            if (pendingImageFiles.length === 0) {
+                return [];
+            }
+
+            try {
+                const files = pendingImageFiles.map(item => item.file);
+                const response = await api.uploadImages(files);
+                return response.urls;
+            } catch (error) {
+                console.error('이미지 업로드 실패:', error);
+                throw new Error(error.message || '이미지 업로드에 실패했습니다.');
+            }
+        }
+
+        // 임시 ID를 실제 URL로 교체
+        function replaceTemporaryIds(content, uploadedUrls) {
+            let updatedContent = content;
+            
+            pendingImageFiles.forEach((item, index) => {
+                const tempId = item.id;
+                const actualUrl = uploadedUrls[index];
+                updatedContent = updatedContent.replace(
+                    new RegExp(`\\]\\(${tempId}\\)`, 'g'),
+                    `](${actualUrl})`
+                );
+            });
+            
+            return updatedContent;
+        }
+
+        // 본문에서 이미지 URL 추출
+        function extractImageUrls(content) {
+            const markdownPattern = /!\[.*?\]\((.*?)\)/g;
+            const urls = [];
+            let match;
+            
+            while ((match = markdownPattern.exec(content)) !== null) {
+                const url = match[1];
+                if (!url.startsWith('TEMP_IMAGE_')) {
+                    urls.push(url);
+                }
+            }
+            
+            return urls;
+        }
+
+        function setupForm() {
+            const writeForm = document.getElementById('writeForm');
+            writeForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const title = document.getElementById('postTitle').value.trim();
+                let body = getEditorContent();
+
+                if (!title || !body) {
+                    showError('제목과 내용을 모두 입력해주세요.');
+                    return;
+                }
+
+                const submitBtn = document.getElementById('submitBtn');
+                submitBtn.disabled = true;
+                submitBtn.textContent = editMode ? '수정 중...' : '등록 중...';
+
+                try {
+                    let uploadedUrls = [];
+                    if (pendingImageFiles.length > 0) {
+                        submitBtn.textContent = '이미지 업로드 중...';
+                        uploadedUrls = await uploadPendingImages();
+                        body = replaceTemporaryIds(body, uploadedUrls);
+                    }
+
+                    const imageUrls = extractImageUrls(body);
+                    
+                    console.log('최종 body:', body);
+                    console.log('최종 imageUrls:', imageUrls);
+
+                    submitBtn.textContent = editMode ? '게시글 수정 중...' : '게시글 등록 중...';
+                    
+                    if (editMode) {
+                        await api.updatePost(editPostId, title, body, imageUrls);
+                        showSuccess('게시글이 수정되었습니다.');
+                        
+                        setTimeout(() => {
+                            window.location.href = `/posts/${editPostId}`;
+                        }, 1000);
+                    } else {
+                        await api.createPost(title, body, imageUrls);
+                        showSuccess('게시글이 작성되었습니다.');
+                        
+                        setTimeout(() => {
+                            window.location.href = '/posts';
+                        }, 1000);
+                    }
+                } catch (error) {
+                    console.error('게시글 처리 실패:', error);
+                    showError(error.message || '게시글 처리에 실패했습니다.');
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = editMode ? '수정' : '등록';
+                }
+            });
+        }
+
+        function goBack() {
+            if (editMode && editPostId) {
+                window.location.href = `/posts/${editPostId}`;
+            } else {
+                window.location.href = '/posts';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

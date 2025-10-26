@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원정보 수정 - 커뮤니티</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+    <main class="main-content">
+        <div class="container">
+            <div class="profile-edit-container">
+                <h2>회원정보수정</h2>
+                
+                <form id="profileEditForm" class="profile-edit-form">
+                    <!-- 프로필 사진 -->
+                    <div class="profile-edit-image">
+                        <div class="profile-edit-preview" onclick="triggerProfileFileInput()">
+                            <img src="" alt="프로필" id="currentProfileImg" style="display: none;">
+                            <div class="profile-edit-default" id="defaultProfileIcon">
+                                <span>👤</span>
+                            </div>
+                            <button type="button" class="profile-change-btn">
+                                변경
+                            </button>
+                        </div>
+                        <input 
+                            type="file" 
+                            id="profileImageInput" 
+                            accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
+                            style="display: none;"
+                            onchange="handleProfileImageChange(event)">
+                    </div>
+
+                    <!-- 이메일 (읽기 전용) -->
+                    <div class="form-group">
+                        <label for="userEmail">이메일</label>
+                        <input type="email" id="userEmail" readonly disabled>
+                    </div>
+
+                    <!-- 닉네임 -->
+                    <div class="form-group">
+                        <label for="userNickname">닉네임</label>
+                        <input type="text" id="userNickname" required placeholder="닉네임을 입력하세요">
+                    </div>
+
+                    <!-- 수정하기 버튼 -->
+                    <button type="submit" class="btn btn-primary btn-block">
+                        수정하기
+                    </button>
+                </form>
+
+                <!-- 회원 탈퇴 -->
+                <div class="account-delete-section">
+                    <button type="button" class="btn btn-danger btn-block" onclick="deleteAccount()">
+                        회원 탈퇴
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/layout.js"></script>
+    <script>
+        let newProfileImage = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            authManager.updateUI();
+
+            // 로그인 확인
+            if (!authManager.checkAuth()) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // 현재 사용자 정보 로드
+            await loadUserInfo();
+        });
+
+        // 사용자 정보 로드
+        async function loadUserInfo() {
+            try {
+                const user = await api.getUserProfile();
+                
+                // 이메일 설정
+                document.getElementById('userEmail').value = user.email;
+                
+                // 닉네임 설정
+                document.getElementById('userNickname').value = user.nickname;
+                
+                // 프로필 이미지 설정
+                if (user.profileImageUrl) {
+                    const profileImg = document.getElementById('currentProfileImg');
+                    const defaultIcon = document.getElementById('defaultProfileIcon');
+                    
+                    profileImg.src = user.profileImageUrl;
+                    profileImg.style.display = 'block';
+                    defaultIcon.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('사용자 정보 로드 실패:', error);
+                showError('사용자 정보를 불러오는데 실패했습니다.');
+            }
+        }
+
+        // 프로필 파일 선택 트리거
+        function triggerProfileFileInput() {
+            document.getElementById('profileImageInput').click();
+        }
+
+        // 프로필 이미지 변경 처리
+        function handleProfileImageChange(event) {
+            const file = event.target.files[0];
+            
+            if (!file) return;
+            
+            // 파일 타입 검증
+            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
+            if (!validTypes.includes(file.type)) {
+                showError('PNG, JPG, GIF, WEBP 형식의 이미지만 업로드 가능합니다.');
+                return;
+            }
+            
+            // 파일 크기 검증 (5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                showError('이미지 크기는 5MB 이하여야 합니다.');
+                return;
+            }
+            
+            // 이미지 미리보기
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                newProfileImage = e.target.result;
+                
+                const profileImg = document.getElementById('currentProfileImg');
+                const defaultIcon = document.getElementById('defaultProfileIcon');
+                
+                profileImg.src = e.target.result;
+                profileImg.style.display = 'block';
+                defaultIcon.style.display = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 폼 제출 처리
+        document.getElementById('profileEditForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const nickname = document.getElementById('userNickname').value.trim();
+            
+            if (!nickname) {
+                showError('닉네임을 입력해주세요.');
+                return;
+            }
+            
+            try {
+                // 사용자 정보 업데이트
+                await api.updateUserProfile(nickname, newProfileImage);
+                
+                // 로컬 스토리지의 사용자 정보 업데이트
+                const updatedUser = await api.getUserProfile();
+                authManager.setUser(updatedUser);
+                
+                showSuccess('회원정보가 수정되었습니다!');
+                
+                setTimeout(() => {
+                    window.location.href = '/posts';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('회원정보 수정 실패:', error);
+                showError(error.message || '회원정보 수정에 실패했습니다.');
+            }
+        });
+
+        // 회원 탈퇴
+        async function deleteAccount() {
+            if (!confirm('정말로 회원 탈퇴하시겠습니까?\n탈퇴 시 모든 데이터가 삭제되며 복구할 수 없습니다.')) {
+                return;
+            }
+            
+            if (!confirm('한 번 더 확인합니다. 정말 탈퇴하시겠습니까?')) {
+                return;
+            }
+            
+            try {
+                await api.deleteAccount();
+                
+                showSuccess('회원 탈퇴가 완료되었습니다.');
+                
+                // 로그아웃 처리
+                authManager.logout();
+                
+                setTimeout(() => {
+                    window.location.href = '/';
+                }, 1500);
+                
+            } catch (error) {
+                console.error('회원 탈퇴 실패:', error);
+                showError(error.message || '회원 탈퇴에 실패했습니다.');
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>회원가입 - 커뮤니티</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <main class="main-content">
+      <div class="container">
+        <div class="register-container">
+          <!-- ✅ auth-container → register-container -->
+          <h2>회원가입</h2>
+
+          <form id="registerForm" class="register-form-layout">
+            <!-- 왼쪽: 프로필 사진 + 닉네임 -->
+            <div class="profile-section">
+              <!-- 프로필 이미지 -->
+              <div class="profile-image-upload">
+                <div
+                  class="profile-image-preview"
+                  id="profilePreview"
+                  onclick="triggerFileInput()"
+                >
+                  <img
+                    src=""
+                    alt="프로필"
+                    id="previewImg"
+                    style="display: none"
+                  />
+                  <div class="default-profile-icon" id="defaultIcon">
+                    <span>👤</span>
+                    <p>프로필 사진 선택</p>
+                  </div>
+                </div>
+                <input
+                  type="file"
+                  id="profileImageInput"
+                  accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
+                  style="display: none"
+                  onchange="handleImageSelect(event)"
+                />
+              </div>
+
+              <!-- 닉네임 -->
+              <div class="form-group">
+                <label for="nickname">닉네임</label>
+                <input
+                  type="text"
+                  id="nickname"
+                  required
+                  placeholder="닉네임을 입력하세요"
+                />
+              </div>
+            </div>
+
+            <!-- 오른쪽: 이메일, 비밀번호 -->
+            <div class="credentials-section">
+              <div class="form-group">
+                <label for="email">이메일</label>
+                <input
+                  type="email"
+                  id="email"
+                  required
+                  placeholder="이메일을 입력하세요"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="password">비밀번호</label>
+                <input
+                  type="password"
+                  id="password"
+                  required
+                  placeholder="비밀번호를 입력하세요"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="passwordConfirm">비밀번호 확인</label>
+                <input
+                  type="password"
+                  id="passwordConfirm"
+                  required
+                  placeholder="비밀번호를 다시 입력하세요"
+                />
+              </div>
+            </div>
+
+            <!-- 가입하기 버튼 + 로그인 유도 -->
+            <div class="form-footer">
+              <button type="submit" class="btn btn-primary btn-large">
+                가입하기
+              </button>
+              <p class="auth-link">
+                이미 계정이 있으신가요? <a href="/login">로그인</a>
+              </p>
+            </div>
+          </form>
+        </div>
+      </div>
+    </main>
+
+    <script src="/js/api.js"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/layout.js"></script>
+    <script>
+      let selectedImageFile = null;
+      let selectedImageUrl = null;
+
+      document.addEventListener("DOMContentLoaded", () => {
+        authManager.updateUI();
+
+        // 이미 로그인되어 있으면 홈으로 리다이렉트
+        if (authManager.isLoggedIn()) {
+          window.location.href = "/";
+          return;
+        }
+
+        setupRegisterForm();
+      });
+
+      // 파일 입력 트리거
+      function triggerFileInput() {
+        document.getElementById("profileImageInput").click();
+      }
+
+      // 이미지 선택 처리
+      function handleImageSelect(event) {
+        const file = event.target.files[0];
+
+        if (!file) return;
+
+        // 파일 타입 검증
+        const validTypes = [
+          "image/png",
+          "image/jpeg",
+          "image/jpg",
+          "image/gif",
+          "image/webp",
+        ];
+        if (!validTypes.includes(file.type)) {
+          showError("PNG, JPG, GIF, WEBP 형식의 이미지만 업로드 가능합니다.");
+          return;
+        }
+
+        // 파일 크기 검증 (5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          showError("이미지 크기는 5MB 이하여야 합니다.");
+          return;
+        }
+
+        selectedImageFile = file;
+
+        // 이미지 미리보기
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          selectedImageUrl = e.target.result;
+
+          const previewImg = document.getElementById("previewImg");
+          const defaultIcon = document.getElementById("defaultIcon");
+
+          previewImg.src = e.target.result;
+          previewImg.style.display = "block";
+          defaultIcon.style.display = "none";
+        };
+        reader.readAsDataURL(file);
+      }
+
+      function setupRegisterForm() {
+        const form = document.getElementById("registerForm");
+
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
+          const passwordConfirm =
+            document.getElementById("passwordConfirm").value;
+          const nickname = document.getElementById("nickname").value.trim();
+
+          // 유효성 검사
+          if (!email || !password || !nickname) {
+            showError("모든 필드를 입력해주세요.");
+            return;
+          }
+
+          if (password !== passwordConfirm) {
+            showError("비밀번호가 일치하지 않습니다.");
+            return;
+          }
+
+          if (password.length < 8) {
+            showError("비밀번호는 8자 이상이어야 합니다.");
+            return;
+          }
+
+          try {
+            console.log("회원가입 요청:", {
+              email,
+              password,
+              nickname,
+              profileImage: selectedImageUrl,
+            });
+
+            // 회원가입 API 호출
+            await api.signup(email, password, nickname, selectedImageUrl);
+
+            showSuccess(
+              "회원가입이 완료되었습니다! 로그인 페이지로 이동합니다."
+            );
+
+            setTimeout(() => {
+              window.location.href = "/login";
+            }, 1500);
+          } catch (error) {
+            console.error("회원가입 실패:", error);
+            showError(error.message || "회원가입에 실패했습니다.");
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
