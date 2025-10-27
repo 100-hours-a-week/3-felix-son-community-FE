@@ -224,18 +224,41 @@ class ApiService {
 
   /**
    * 사용자 정보 수정
+   * @param {string} nickname - 새 닉네임
+   * @param {File|null} profileImageFile - 프로필 이미지 File 객체 (선택)
    */
-  async updateUserProfile(nickname, profileImageUrl = null) {
-    const data = { nickname };
+  async updateUserProfile(nickname, profileImageFile = null) {
+    try {
+      let profileImageUrl = null;
+      
+      // ✅ 새 이미지가 있으면 먼저 업로드
+      if (profileImageFile) {
+        console.log('프로필 이미지 업로드 시작:', {
+          fileName: profileImageFile.name,
+          fileSize: `${(profileImageFile.size / 1024).toFixed(2)} KB`,
+          fileType: profileImageFile.type
+        });
+        
+        const uploadResponse = await this.uploadImages([profileImageFile]);
+        profileImageUrl = uploadResponse.urls[0];
+        
+        console.log('프로필 이미지 업로드 완료:', profileImageUrl);
+      }
+      
+      // ✅ 프로필 업데이트 요청 (URL만 전송)
+      const data = { nickname };
+      
+      if (profileImageUrl) {
+        data.profileImageUrl = profileImageUrl;
+      }
 
-    // ✅ 프로필 이미지가 있으면 추가
-    if (profileImageUrl) {
-      data.profileImageUrl = profileImageUrl;
+      console.log("프로필 업데이트 요청 데이터:", data);
+
+      return this.patch("/users/me", data);
+    } catch (error) {
+      console.error('프로필 업데이트 실패:', error);
+      throw error;
     }
-
-    console.log("API 요청 데이터:", data);
-
-    return this.patch("/users/me", data);
   }
 
   // 회원임시탈퇴

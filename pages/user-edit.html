@@ -64,7 +64,8 @@
     <script src="/js/auth.js"></script>
     <script src="/js/layout.js"></script>
     <script>
-        let newProfileImage = null;
+        // ✅ File 객체를 저장 (base64 대신!)
+        let selectedProfileImageFile = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             authManager.updateUI();
@@ -110,7 +111,7 @@
             document.getElementById('profileImageInput').click();
         }
 
-        // 프로필 이미지 변경 처리
+        // ✅ 프로필 이미지 변경 처리 (blob URL 사용)
         function handleProfileImageChange(event) {
             const file = event.target.files[0];
             
@@ -129,19 +130,25 @@
                 return;
             }
             
-            // 이미지 미리보기
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                newProfileImage = e.target.result;
-                
-                const profileImg = document.getElementById('currentProfileImg');
-                const defaultIcon = document.getElementById('defaultProfileIcon');
-                
-                profileImg.src = e.target.result;
-                profileImg.style.display = 'block';
-                defaultIcon.style.display = 'none';
-            };
-            reader.readAsDataURL(file);
+            // ✅ File 객체 저장 (base64 변환 안 함!)
+            selectedProfileImageFile = file;
+            
+            // ✅ blob URL로 미리보기 (빠르고 메모리 효율적!)
+            const blobUrl = URL.createObjectURL(file);
+            
+            const profileImg = document.getElementById('currentProfileImg');
+            const defaultIcon = document.getElementById('defaultProfileIcon');
+            
+            profileImg.src = blobUrl;
+            profileImg.style.display = 'block';
+            defaultIcon.style.display = 'none';
+            
+            console.log('이미지 선택:', {
+                fileName: file.name,
+                fileSize: `${(file.size / 1024).toFixed(2)} KB`,
+                fileType: file.type,
+                blobUrl: blobUrl
+            });
         }
 
         // 폼 제출 처리
@@ -156,8 +163,8 @@
             }
             
             try {
-                // 사용자 정보 업데이트
-                await api.updateUserProfile(nickname, newProfileImage);
+                // ✅ File 객체 전달 (base64 문자열 대신!)
+                await api.updateUserProfile(nickname, selectedProfileImageFile);
                 
                 // 로컬 스토리지의 사용자 정보 업데이트
                 const updatedUser = await api.getUserProfile();
