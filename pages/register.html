@@ -10,7 +10,6 @@
     <main class="main-content">
       <div class="container">
         <div class="register-container">
-          <!-- ✅ auth-container → register-container -->
           <h2>회원가입</h2>
 
           <form id="registerForm" class="register-form-layout">
@@ -90,7 +89,7 @@
 
             <!-- 가입하기 버튼 + 로그인 유도 -->
             <div class="form-footer">
-              <button type="submit" class="btn btn-primary btn-large">
+              <button type="submit" class="btn btn-primary btn-large" id="submitBtn">
                 가입하기
               </button>
               <p class="auth-link">
@@ -106,8 +105,8 @@
     <script src="/js/auth.js"></script>
     <script src="/js/layout.js"></script>
     <script>
+      // ✅ File 객체 저장 (base64 대신)
       let selectedImageFile = null;
-      let selectedImageUrl = null;
 
       document.addEventListener("DOMContentLoaded", () => {
         authManager.updateUI();
@@ -126,7 +125,7 @@
         document.getElementById("profileImageInput").click();
       }
 
-      // 이미지 선택 처리
+      // ✅ 이미지 선택 처리 - File 객체만 저장
       function handleImageSelect(event) {
         const file = event.target.files[0];
 
@@ -151,21 +150,53 @@
           return;
         }
 
+        // ✅ File 객체 저장
         selectedImageFile = file;
 
-        // 이미지 미리보기
-        const reader = new FileReader();
-        reader.onload = function (e) {
-          selectedImageUrl = e.target.result;
+        // ✅ Blob URL로 미리보기 (메모리 효율적)
+        const blobUrl = URL.createObjectURL(file);
+        const previewImg = document.getElementById("previewImg");
+        const defaultIcon = document.getElementById("defaultIcon");
 
-          const previewImg = document.getElementById("previewImg");
-          const defaultIcon = document.getElementById("defaultIcon");
+        previewImg.src = blobUrl;
+        previewImg.style.display = "block";
+        defaultIcon.style.display = "none";
 
-          previewImg.src = e.target.result;
-          previewImg.style.display = "block";
-          defaultIcon.style.display = "none";
-        };
-        reader.readAsDataURL(file);
+        console.log("이미지 선택 완료:", file.name, file.size, "bytes");
+      }
+
+      // ✅ 이미지 업로드 (FormData 사용)
+      async function uploadProfileImage(file) {
+        const formData = new FormData();
+        formData.append("images", file);
+
+        try {
+          // ✅ 백엔드 전체 URL 사용 (포트 8080)
+          const response = await fetch("http://localhost:8080/api/images", {
+            method: "POST",
+            body: formData,
+            // Content-Type 헤더를 설정하지 않음 (브라우저가 자동으로 boundary 설정)
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error("서버 응답:", errorText);
+            throw new Error("이미지 업로드에 실패했습니다.");
+          }
+
+          const data = await response.json();
+          
+          // ImageUploadResponse { urls: ["http://..."] }
+          if (data.urls && data.urls.length > 0) {
+            console.log("이미지 업로드 성공:", data.urls[0]);
+            return data.urls[0];  // 첫 번째 URL 반환
+          }
+
+          throw new Error("업로드된 이미지 URL을 받지 못했습니다.");
+        } catch (error) {
+          console.error("이미지 업로드 오류:", error);
+          throw error;
+        }
       }
 
       function setupRegisterForm() {
@@ -176,9 +207,9 @@
 
           const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password").value;
-          const passwordConfirm =
-            document.getElementById("passwordConfirm").value;
+          const passwordConfirm = document.getElementById("passwordConfirm").value;
           const nickname = document.getElementById("nickname").value.trim();
+          const submitBtn = document.getElementById("submitBtn");
 
           // 유효성 검사
           if (!email || !password || !nickname) {
@@ -196,20 +227,33 @@
             return;
           }
 
+          // 버튼 비활성화
+          submitBtn.disabled = true;
+          const originalText = submitBtn.textContent;
+
           try {
+            let profileImageUrl = null;
+
+            // ✅ 1단계: 이미지가 있으면 먼저 업로드
+            if (selectedImageFile) {
+              submitBtn.textContent = "이미지 업로드 중...";
+              console.log("프로필 이미지 업로드 시작");
+              
+              profileImageUrl = await uploadProfileImage(selectedImageFile);
+              console.log("프로필 이미지 업로드 완료:", profileImageUrl);
+            }
+
+            // ✅ 2단계: 회원가입 API 호출 (짧은 URL만 전송)
+            submitBtn.textContent = "회원가입 처리 중...";
             console.log("회원가입 요청:", {
               email,
-              password,
               nickname,
-              profileImage: selectedImageUrl,
+              profileImageUrl,
             });
 
-            // 회원가입 API 호출
-            await api.signup(email, password, nickname, selectedImageUrl);
+            await api.signup(email, password, nickname, profileImageUrl);
 
-            showSuccess(
-              "회원가입이 완료되었습니다! 로그인 페이지로 이동합니다."
-            );
+            showSuccess("회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.");
 
             setTimeout(() => {
               window.location.href = "/login";
@@ -217,6 +261,10 @@
           } catch (error) {
             console.error("회원가입 실패:", error);
             showError(error.message || "회원가입에 실패했습니다.");
+            
+            // 버튼 복구
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
           }
         });
       }

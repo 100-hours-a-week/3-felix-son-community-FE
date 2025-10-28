@@ -7,41 +7,43 @@
     <link rel="stylesheet" href="/css/style.css" />
   </head>
   <body>
-    <!-- 네비게이션은 layout.js가 자동 삽입 -->
-
     <main class="main-content">
       <div class="container">
-        <div class="login-container">
-          <!-- ✅ auth-container → login-container -->
+        <div class="auth-container">
           <h2>로그인</h2>
-          <form id="loginForm" class="login-form">
-            <!-- ✅ auth-form → login-form -->
+
+          <form id="loginForm" class="auth-form">
             <div class="form-group">
-              <label for="loginEmail">이메일</label>
+              <label for="email">이메일</label>
               <input
                 type="email"
-                id="loginEmail"
+                id="email"
                 required
-                placeholder="example@email.com"
+                placeholder="이메일을 입력하세요"
               />
             </div>
+
             <div class="form-group">
-              <label for="loginPassword">비밀번호</label>
-              <input type="password" id="loginPassword" required />
+              <label for="password">비밀번호</label>
+              <input
+                type="password"
+                id="password"
+                required
+                placeholder="비밀번호를 입력하세요"
+              />
             </div>
-            <button type="submit" class="btn btn-primary btn-block">
+
+            <button type="submit" class="btn btn-primary btn-large">
               로그인
             </button>
+
+            <p class="auth-link">
+              계정이 없으신가요? <a href="/register">회원가입</a>
+            </p>
           </form>
-          <p class="auth-switch">
-            계정이 없으신가요?
-            <a href="/signup">회원가입</a>
-          </p>
         </div>
       </div>
     </main>
-
-    <!-- 푸터는 layout.js가 자동 삽입 -->
 
     <script src="/js/api.js"></script>
     <script src="/js/auth.js"></script>
@@ -50,25 +52,80 @@
       document.addEventListener("DOMContentLoaded", () => {
         authManager.updateUI();
 
+        // 이미 로그인되어 있으면 홈으로 리다이렉트
         if (authManager.isLoggedIn()) {
-          window.location.href = "/posts";
+          window.location.href = "/";
           return;
         }
 
-        const loginForm = document.getElementById("loginForm");
-        loginForm.addEventListener("submit", async (e) => {
+        setupLoginForm();
+      });
+
+      function setupLoginForm() {
+        const form = document.getElementById("loginForm");
+
+        form.addEventListener("submit", async (e) => {
           e.preventDefault();
 
-          const email = document.getElementById("loginEmail").value;
-          const password = document.getElementById("loginPassword").value;
+          const email = document.getElementById("email").value.trim();
+          const password = document.getElementById("password").value;
 
-          const success = await authManager.login(email, password);
+          if (!email || !password) {
+            showError("이메일과 비밀번호를 입력해주세요.");
+            return;
+          }
 
-          if (success) {
-            window.location.href = "/posts";
+          try {
+            console.log("로그인 요청:", { email });
+
+            // ✅ api.login() 직접 호출 (accountRestored 확인을 위해)
+            const response = await api.login(email, password);
+
+            console.log("로그인 성공:", response);
+
+          
+
+            // ✅ 토큰 저장 (auth.js의 setToken 사용)
+            authManager.setToken(response.accessToken);
+
+            // ✅ refreshToken 저장
+            if (response.refreshToken) {
+              localStorage.setItem("refreshToken", response.refreshToken);
+            }
+
+            // ✅ 사용자 정보 저장 (setUser 사용, setUserInfo 아님!)
+            const userInfo = {
+              userId: response.userId,
+              email: response.email,
+              nickname: response.nickname,
+              profileImageUrl: response.profileImageUrl,
+            };
+            authManager.setUser(userInfo);
+
+            // ✅ UI 업데이트
+            authManager.updateUI();
+
+            // ✅ 계정 복구 시 특별 메시지, 일반 로그인 시 기본 메시지
+            if (response.accountRestored === true) {
+              showSuccess(
+                "계정이 복구되었습니다! 다시 돌아오신 것을 환영합니다. 😊"
+              );
+            } else {
+              showSuccess("로그인되었습니다!");
+            }
+
+            setTimeout(() => {
+              window.location.href = "/";
+            }, 1500);
+          } catch (error) {
+            console.error("로그인 실패:", error);
+            showError(error.message || "로그인에 실패했습니다.");
           }
         });
-      });
+      }
+
     </script>
+
+    
   </body>
 </html>
