@@ -1109,82 +1109,119 @@ a.btn {
 }
 
 /* ========================================
-   로그인 페이지 전용 스타일
+   로그인 페이지 전용 스타일 - login- 접두사 사용
 ======================================== */
 
-/* 로그인 컨테이너 */
+/* 메인 콘텐츠 영역 (중앙 정렬을 위해 추가) */
+.page-login .main-content {
+    /* 이 부분은 전역 CSS일 가능성이 높으므로 건드리지 않거나,
+       로그인 페이지에만 적용되는 별도의 부모 클래스를 사용해야 합니다.
+       일단은 기존 코드를 유지합니다. */
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: calc(100vh - 100px);
+    padding: 30px 20px;
+    background-color: #f7f7f7;
+}
+
+/* 1. 로그인 컨테이너 (login-container) */
 .login-container {
     max-width: 450px;
+    width: 100%;
     margin: 4rem auto;
-    padding: 3rem 2rem;
+    padding: 0;
+}
+
+/* 2. 로그인 카드 스타일 (login-card) */
+.login-card {
+    padding: 3rem;
     background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); 
+    border: 1px solid #e0e0e0; /* 얇은 회색 테두리 */
 }
 
-.login-container h2 {
-    text-align: center;
-    margin-bottom: 2.5rem;
+/* 3. 제목 스타일 */
+.login-card h1 {
+    text-align: center; /* 가운데 정렬 */
+    margin-bottom: 2rem;
     color: #333;
-    font-size: 2rem;
+    font-size: 2.5rem;
+    font-weight: 700;
 }
 
-/* 로그인 폼 */
-.login-form .form-group {
-    margin-bottom: 1.8rem;
+/* 4. 폼 그룹 스타일 (이것은 범용으로 form-group을 유지합니다. 만약 이것도 분리해야 한다면 login-form-group으로 변경해야 합니다.) */
+.form-group {
+    margin-bottom: 1.5rem;
 }
 
-.login-form .form-group label {
+.form-group label {
     display: block;
-    margin-bottom: 0.6rem;
+    margin-bottom: 0.5rem;
     font-weight: 600;
     color: #333;
-    font-size: 0.95rem;
+    font-size: 1rem;
 }
 
-.login-form .form-group input {
+/* 5. 입력 필드 스타일 */
+.form-group input {
     width: 100%;
-    padding: 1rem;
+    padding: 0.8rem 1rem;
     border: 1px solid #ddd;
-    border-radius: 8px;
+    border-radius: 4px;
     font-size: 1rem;
-    transition: all 0.3s;
+    transition: border-color 0.3s, box-shadow 0.3s;
     box-sizing: border-box;
     font-family: inherit;
 }
 
-.login-form .form-group input:focus {
+.form-group input:focus {
     outline: none;
-    border-color: #007bff;
-    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    border-color: #5b9bd5;
+    box-shadow: 0 0 0 2px rgba(91, 155, 213, 0.2);
 }
 
-.login-form .form-group input::placeholder {
-    color: #999;
+.form-group input::placeholder {
+    color: #aaa;
 }
 
-/* 로그인 버튼 */
-.login-form .btn-block {
+/* 6. 로그인 버튼 스타일 */
+/* .btn-primary.btn-block 은 전역 버튼 스타일을 이용합니다. */
+.btn-primary.btn-block {
     width: 100%;
-    padding: 1.1rem;
-    margin-top: 0.5rem;
+    padding: 1rem;
+    margin-top: 1.5rem;
+    border: none;
+    border-radius: 4px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    background-color: #4285f4; 
+    color: white;
+    cursor: pointer;
+    transition: background-color 0.3s;
 }
 
-/* 로그인 하단 링크 */
-.login-container .auth-switch {
+.btn-primary.btn-block:hover {
+    background-color: #3a72d3;
+}
+
+/* 7. 하단 회원가입 링크 (login-footer) */
+.login-footer {
     text-align: center;
-    margin-top: 2rem;
+    margin-top: 1.5rem;
+    padding-top: 1rem;
     color: #666;
     font-size: 0.95rem;
 }
 
-.login-container .auth-switch a {
-    color: #007bff;
+.login-footer a {
+    color: #4285f4;
     text-decoration: none;
     font-weight: 600;
 }
 
-.login-container .auth-switch a:hover {
+.login-footer a:hover {
     text-decoration: underline;
 }
 

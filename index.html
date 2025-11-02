@@ -1,36 +1,60 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>홈 - 커뮤니티</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
-    <!-- 헤더는 layout.js가 자동 삽입 -->
-    
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <header></header>
+
     <main class="main-content">
-        <div class="container">
-            <section class="welcome-section">
-                <h2>커뮤니티에 오신 것을 환영합니다!</h2>
-                <p>자유롭게 소통하고 정보를 공유하세요.</p>
-                <div class="welcome-actions">
-                    <a href="/posts" class="btn btn-primary">게시글 보기</a>
-                    <a href="/login" class="btn btn-secondary">로그인</a>
-                </div>
-            </section>
-        </div>
+      <div class="container">
+        <section class="welcome-section">
+          <h2>커뮤니티에 오신 것을 환영합니다!</h2>
+          <p>자유롭게 소통하고 정보를 공유하세요.</p>
+          <div class="welcome-actions">
+            <a href="/posts" class="btn btn-primary">게시글 보기</a>
+            <a href="/login" class="btn btn-secondary" id="loginBtn">로그인</a>
+          </div>
+        </section>
+      </div>
     </main>
-    
-    <!-- 푸터는 layout.js가 자동 삽입 -->
-    
-    <script src="/js/api.js"></script>
-    <script src="/js/auth.js"></script>
+
+    <footer></footer>
+
+    <script src="/js/notificationService.js"></script>
+    <script src="/js/apiService.js"></script>
+    <script src="/js/postService.js"></script>
+    <script src="/js/commentService.js"></script>
+    <script src="/js/fileUploadService.js"></script>
+    <script src="/js/userService.js"></script>
+    <script src="/js/authUiManager.js"></script>
+    <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
+    <script src="/js/initService.js"></script>
+
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            authManager.updateUI();
-        });
+      document.addEventListener("DOMContentLoaded", () => {
+        console.log("index.html 로드 완료");
+        
+        // ✅ 로그인 버튼 표시/숨김
+        updateLoginButton();
+      });
+
+      function updateLoginButton() {
+        const loginBtn = document.getElementById("loginBtn");
+        if (!loginBtn) return;
+
+        if (authManager.isLoggedIn()) {
+          loginBtn.style.display = "none";
+          console.log("로그인 상태 - 로그인 버튼 숨김");
+        } else {
+          loginBtn.style.display = "inline-block";
+          console.log("비로그인 상태 - 로그인 버튼 표시");
+        }
+      }
     </script>
-</body>
+  </body>
 </html>

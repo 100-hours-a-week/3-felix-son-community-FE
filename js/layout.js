@@ -1,6 +1,5 @@
 // js/layout.js - 공통 레이아웃 관리
-class Layout {
-  // 공통 헤더 HTML 반환
+window.Layout = class {
   static getHeaderHTML() {
     return `
       <nav class="navbar">
@@ -86,13 +85,21 @@ class Layout {
     });
   }
 
-  // 초기화 (헤더 + 푸터 로드)
   static init() {
     this.loadHeader();
     this.loadFooter();
-    console.log("공통 레이아웃 로드 완료");
+    console.log("✅ 공통 레이아웃 로드 완료");
+
+    // ✅ authManager가 있으면 UI 업데이트
+    // 약간의 지연을 주어 DOM이 완전히 준비되도록
+    setTimeout(() => {
+      if (typeof authManager !== "undefined") {
+        authManager.updateUI();
+        console.log("✅ 인증 UI 업데이트 완료");
+      }
+    }, 0);
   }
-}
+};
 
 // 페이지 로드 시 자동 실행
 document.addEventListener("DOMContentLoaded", () => {

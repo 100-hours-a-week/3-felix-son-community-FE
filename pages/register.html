@@ -31,6 +31,7 @@
                   <div class="default-profile-icon" id="defaultIcon">
                     <span>👤</span>
                     <p>프로필 사진 선택</p>
+                    <small>(선택사항)</small>
                   </div>
                 </div>
                 <input
@@ -40,56 +41,86 @@
                   style="display: none"
                   onchange="handleImageSelect(event)"
                 />
+                <button
+                  type="button"
+                  class="btn-remove-image"
+                  id="removeImageBtn"
+                  style="display: none"
+                  onclick="removeSelectedImage()"
+                >
+                  이미지 제거
+                </button>
               </div>
 
               <!-- 닉네임 -->
               <div class="form-group">
-                <label for="nickname">닉네임</label>
+                <label for="nickname"
+                  >닉네임 <span class="required">*</span></label
+                >
                 <input
                   type="text"
                   id="nickname"
                   required
                   placeholder="닉네임을 입력하세요"
+                  maxlength="20"
                 />
+                <span class="helper-text">* 2-20자 이내</span>
+                <span class="error-text" id="nicknameError"></span>
               </div>
             </div>
 
             <!-- 오른쪽: 이메일, 비밀번호 -->
             <div class="credentials-section">
               <div class="form-group">
-                <label for="email">이메일</label>
+                <label for="email"
+                  >이메일 <span class="required">*</span></label
+                >
                 <input
                   type="email"
                   id="email"
                   required
-                  placeholder="이메일을 입력하세요"
+                  placeholder="example@email.com"
                 />
+                <span class="error-text" id="emailError"></span>
               </div>
 
               <div class="form-group">
-                <label for="password">비밀번호</label>
+                <label for="password"
+                  >비밀번호 <span class="required">*</span></label
+                >
                 <input
                   type="password"
                   id="password"
                   required
                   placeholder="비밀번호를 입력하세요"
                 />
+                <span class="helper-text"
+                  >* 8자 이상, 영문, 숫자, 특수문자 포함</span
+                >
+                <span class="error-text" id="passwordError"></span>
               </div>
 
               <div class="form-group">
-                <label for="passwordConfirm">비밀번호 확인</label>
+                <label for="passwordConfirm"
+                  >비밀번호 확인 <span class="required">*</span></label
+                >
                 <input
                   type="password"
                   id="passwordConfirm"
                   required
                   placeholder="비밀번호를 다시 입력하세요"
                 />
+                <span class="error-text" id="passwordConfirmError"></span>
               </div>
             </div>
 
             <!-- 가입하기 버튼 + 로그인 유도 -->
             <div class="form-footer">
-              <button type="submit" class="btn btn-primary btn-large" id="submitBtn">
+              <button
+                type="submit"
+                class="btn btn-primary btn-large"
+                id="submitBtn"
+              >
                 가입하기
               </button>
               <p class="auth-link">
@@ -101,31 +132,219 @@
       </div>
     </main>
 
-    <script src="/js/api.js"></script>
-    <script src="/js/auth.js"></script>
+    <!-- 순서 중요: 클래스 정의 → 초기화 -->
+    <script src="/js/notificationService.js"></script>
+    <script src="/js/apiService.js"></script>
+    <script src="/js/postService.js"></script>
+    <script src="/js/commentService.js"></script>
+    <script src="/js/fileUploadService.js"></script>
+    <script src="/js/userService.js"></script>
+    <script src="/js/authUiManager.js"></script>
+    <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
+    <!-- ✅ 마지막에 초기화 -->
+    <script src="/js/initService.js"></script>
     <script>
-      // ✅ File 객체 저장 (base64 대신)
+      // File 객체 저장
       let selectedImageFile = null;
+      let blobUrl = null; // Blob URL 관리
 
       document.addEventListener("DOMContentLoaded", () => {
         authManager.updateUI();
 
-        // 이미 로그인되어 있으면 홈으로 리다이렉트
+        // ✅ 이미 로그인되어 있으면 홈으로 리다이렉트
         if (authManager.isLoggedIn()) {
           window.location.href = "/";
           return;
         }
 
         setupRegisterForm();
+        setupValidation();
       });
+
+      // ✅ 유효성 검사 설정
+      function setupValidation() {
+        const nicknameInput = document.getElementById("nickname");
+        const emailInput = document.getElementById("email");
+        const passwordInput = document.getElementById("password");
+        const passwordConfirmInput = document.getElementById("passwordConfirm");
+
+        // blur 이벤트로 유효성 검사
+        nicknameInput.addEventListener("blur", validateNickname);
+        emailInput.addEventListener("blur", validateEmail);
+        passwordInput.addEventListener("blur", validatePassword);
+        passwordConfirmInput.addEventListener("blur", validatePasswordConfirm);
+
+        // input 이벤트로 에러 메시지 제거
+        nicknameInput.addEventListener("input", () =>
+          clearFieldError(nicknameInput, "nicknameError")
+        );
+        emailInput.addEventListener("input", () =>
+          clearFieldError(emailInput, "emailError")
+        );
+        passwordInput.addEventListener("input", () =>
+          clearFieldError(passwordInput, "passwordError")
+        );
+        passwordConfirmInput.addEventListener("input", () =>
+          clearFieldError(passwordConfirmInput, "passwordConfirmError")
+        );
+      }
+
+      // ✅ 필드 에러 표시
+      function showFieldError(input, errorId, message) {
+        input.classList.add("error");
+        const errorElement = document.getElementById(errorId);
+        errorElement.textContent = message;
+        errorElement.classList.add("show");
+      }
+
+      // ✅ 필드 에러 제거
+      function clearFieldError(input, errorId) {
+        input.classList.remove("error");
+        const errorElement = document.getElementById(errorId);
+        errorElement.textContent = "";
+        errorElement.classList.remove("show");
+      }
+
+      // ✅ 닉네임 유효성 검사
+      function validateNickname() {
+        const nicknameInput = document.getElementById("nickname");
+        const nickname = nicknameInput.value.trim();
+
+        clearFieldError(nicknameInput, "nicknameError");
+
+        if (nickname.length === 0) {
+          showFieldError(
+            nicknameInput,
+            "nicknameError",
+            "닉네임을 입력하세요."
+          );
+          return false;
+        }
+
+        if (nickname.length < 2) {
+          showFieldError(
+            nicknameInput,
+            "nicknameError",
+            "닉네임은 2자 이상이어야 합니다."
+          );
+          return false;
+        }
+
+        if (nickname.length > 20) {
+          showFieldError(
+            nicknameInput,
+            "nicknameError",
+            "닉네임은 20자 이하여야 합니다."
+          );
+          return false;
+        }
+
+        return true;
+      }
+
+      // ✅ 이메일 유효성 검사
+      function validateEmail() {
+        const emailInput = document.getElementById("email");
+        const email = emailInput.value.trim();
+
+        clearFieldError(emailInput, "emailError");
+
+        if (email.length === 0) {
+          showFieldError(emailInput, "emailError", "이메일을 입력하세요.");
+          return false;
+        }
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+          showFieldError(
+            emailInput,
+            "emailError",
+            "올바른 이메일 형식이 아닙니다."
+          );
+          return false;
+        }
+
+        return true;
+      }
+
+      // ✅ 비밀번호 유효성 검사
+      function validatePassword() {
+        const passwordInput = document.getElementById("password");
+        const password = passwordInput.value;
+
+        clearFieldError(passwordInput, "passwordError");
+
+        if (password.length === 0) {
+          showFieldError(
+            passwordInput,
+            "passwordError",
+            "비밀번호를 입력하세요."
+          );
+          return false;
+        }
+
+        if (password.length < 8) {
+          showFieldError(
+            passwordInput,
+            "passwordError",
+            "비밀번호는 최소 8자 이상이어야 합니다."
+          );
+          return false;
+        }
+
+        const hasLetter = /[a-zA-Z]/.test(password);
+        const hasNumber = /\d/.test(password);
+        const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+
+        if (!hasLetter || !hasNumber || !hasSpecial) {
+          showFieldError(
+            passwordInput,
+            "passwordError",
+            "영문, 숫자, 특수문자를 모두 포함해야 합니다."
+          );
+          return false;
+        }
+
+        return true;
+      }
+
+      // ✅ 비밀번호 확인 유효성 검사
+      function validatePasswordConfirm() {
+        const passwordInput = document.getElementById("password");
+        const passwordConfirmInput = document.getElementById("passwordConfirm");
+        const password = passwordInput.value;
+        const passwordConfirm = passwordConfirmInput.value;
+
+        clearFieldError(passwordConfirmInput, "passwordConfirmError");
+
+        if (passwordConfirm.length === 0) {
+          showFieldError(
+            passwordConfirmInput,
+            "passwordConfirmError",
+            "비밀번호 확인을 입력하세요."
+          );
+          return false;
+        }
+
+        if (password !== passwordConfirm) {
+          showFieldError(
+            passwordConfirmInput,
+            "passwordConfirmError",
+            "비밀번호가 일치하지 않습니다."
+          );
+          return false;
+        }
+
+        return true;
+      }
 
       // 파일 입력 트리거
       function triggerFileInput() {
         document.getElementById("profileImageInput").click();
       }
 
-      // ✅ 이미지 선택 처리 - File 객체만 저장
+      // ✅ 이미지 선택 처리
       function handleImageSelect(event) {
         const file = event.target.files[0];
 
@@ -141,55 +360,94 @@
         ];
         if (!validTypes.includes(file.type)) {
           showError("PNG, JPG, GIF, WEBP 형식의 이미지만 업로드 가능합니다.");
+          event.target.value = ""; // 입력 초기화
           return;
         }
 
         // 파일 크기 검증 (5MB)
         if (file.size > 5 * 1024 * 1024) {
           showError("이미지 크기는 5MB 이하여야 합니다.");
+          event.target.value = ""; // 입력 초기화
           return;
         }
 
-        // ✅ File 객체 저장
+        // ✅ 이전 Blob URL 해제 (메모리 누수 방지)
+        if (blobUrl) {
+          URL.revokeObjectURL(blobUrl);
+        }
+
+        // File 객체 저장
         selectedImageFile = file;
 
-        // ✅ Blob URL로 미리보기 (메모리 효율적)
-        const blobUrl = URL.createObjectURL(file);
+        // Blob URL로 미리보기
+        blobUrl = URL.createObjectURL(file);
         const previewImg = document.getElementById("previewImg");
         const defaultIcon = document.getElementById("defaultIcon");
+        const removeBtn = document.getElementById("removeImageBtn");
 
         previewImg.src = blobUrl;
         previewImg.style.display = "block";
         defaultIcon.style.display = "none";
+        removeBtn.style.display = "inline-block";
 
-        console.log("이미지 선택 완료:", file.name, file.size, "bytes");
+        console.log(
+          "이미지 선택 완료:",
+          file.name,
+          (file.size / 1024).toFixed(2),
+          "KB"
+        );
       }
 
-      // ✅ 이미지 업로드 (FormData 사용)
+      // ✅ 선택한 이미지 제거
+      function removeSelectedImage() {
+        selectedImageFile = null;
+
+        if (blobUrl) {
+          URL.revokeObjectURL(blobUrl);
+          blobUrl = null;
+        }
+
+        const previewImg = document.getElementById("previewImg");
+        const defaultIcon = document.getElementById("defaultIcon");
+        const removeBtn = document.getElementById("removeImageBtn");
+        const fileInput = document.getElementById("profileImageInput");
+
+        previewImg.src = "";
+        previewImg.style.display = "none";
+        defaultIcon.style.display = "block";
+        removeBtn.style.display = "none";
+        fileInput.value = "";
+
+        console.log("이미지 제거 완료");
+      }
+
+      // ✅ 이미지 업로드 (인증 없이)
       async function uploadProfileImage(file) {
         const formData = new FormData();
         formData.append("images", file);
 
         try {
-          // ✅ 백엔드 전체 URL 사용 (포트 8080)
+          console.log("이미지 업로드 시작:", file.name);
+
           const response = await fetch("http://localhost:8080/api/images", {
             method: "POST",
             body: formData,
-            // Content-Type 헤더를 설정하지 않음 (브라우저가 자동으로 boundary 설정)
+            // ✅ 회원가입 시에는 토큰 없이 업로드 (백엔드에서 허용해야 함)
           });
 
           if (!response.ok) {
-            const errorText = await response.text();
-            console.error("서버 응답:", errorText);
-            throw new Error("이미지 업로드에 실패했습니다.");
+            const errorData = await response.json().catch(() => ({}));
+            console.error("이미지 업로드 실패:", errorData);
+            throw new Error(
+              errorData.message || "이미지 업로드에 실패했습니다."
+            );
           }
 
           const data = await response.json();
-          
-          // ImageUploadResponse { urls: ["http://..."] }
+
           if (data.urls && data.urls.length > 0) {
             console.log("이미지 업로드 성공:", data.urls[0]);
-            return data.urls[0];  // 첫 번째 URL 반환
+            return data.urls[0];
           }
 
           throw new Error("업로드된 이미지 URL을 받지 못했습니다.");
@@ -205,29 +463,28 @@
         form.addEventListener("submit", async (e) => {
           e.preventDefault();
 
+          // ✅ 모든 유효성 검사 실행
+          const isNicknameValid = validateNickname();
+          const isEmailValid = validateEmail();
+          const isPasswordValid = validatePassword();
+          const isPasswordConfirmValid = validatePasswordConfirm();
+
+          if (
+            !isNicknameValid ||
+            !isEmailValid ||
+            !isPasswordValid ||
+            !isPasswordConfirmValid
+          ) {
+            showError("입력 내용을 확인해주세요.");
+            return;
+          }
+
           const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password").value;
-          const passwordConfirm = document.getElementById("passwordConfirm").value;
           const nickname = document.getElementById("nickname").value.trim();
           const submitBtn = document.getElementById("submitBtn");
 
-          // 유효성 검사
-          if (!email || !password || !nickname) {
-            showError("모든 필드를 입력해주세요.");
-            return;
-          }
-
-          if (password !== passwordConfirm) {
-            showError("비밀번호가 일치하지 않습니다.");
-            return;
-          }
-
-          if (password.length < 8) {
-            showError("비밀번호는 8자 이상이어야 합니다.");
-            return;
-          }
-
-          // 버튼 비활성화
+          // ✅ 버튼 비활성화 (중복 제출 방지)
           submitBtn.disabled = true;
           const originalText = submitBtn.textContent;
 
@@ -238,36 +495,62 @@
             if (selectedImageFile) {
               submitBtn.textContent = "이미지 업로드 중...";
               console.log("프로필 이미지 업로드 시작");
-              
+
               profileImageUrl = await uploadProfileImage(selectedImageFile);
               console.log("프로필 이미지 업로드 완료:", profileImageUrl);
             }
 
-            // ✅ 2단계: 회원가입 API 호출 (짧은 URL만 전송)
+            // ✅ 2단계: 회원가입 API 호출
             submitBtn.textContent = "회원가입 처리 중...";
             console.log("회원가입 요청:", {
               email,
               nickname,
-              profileImageUrl,
+              profileImageUrl: profileImageUrl || "없음",
             });
 
-            await api.signup(email, password, nickname, profileImageUrl);
+            await authManager.signup(email, password, nickname, profileImageUrl);
 
-            showSuccess("회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.");
+            showSuccess(
+              "회원가입이 완료되었습니다! 로그인 페이지로 이동합니다."
+            );
+
+            // ✅ Blob URL 정리
+            if (blobUrl) {
+              URL.revokeObjectURL(blobUrl);
+            }
 
             setTimeout(() => {
               window.location.href = "/login";
             }, 1500);
           } catch (error) {
             console.error("회원가입 실패:", error);
-            showError(error.message || "회원가입에 실패했습니다.");
-            
-            // 버튼 복구
+
+            // ✅ 구체적인 에러 메시지
+            let errorMessage = "회원가입에 실패했습니다.";
+
+            if (error.status === 400) {
+              errorMessage = error.message || "입력 정보를 확인해주세요.";
+            } else if (error.status === 409) {
+              errorMessage = "이미 사용 중인 이메일입니다.";
+            } else if (error.message) {
+              errorMessage = error.message;
+            }
+
+            showError(errorMessage);
+
+            // ✅ 버튼 복구
             submitBtn.disabled = false;
             submitBtn.textContent = originalText;
           }
         });
       }
+
+      // ✅ 페이지 언로드 시 Blob URL 정리
+      window.addEventListener("beforeunload", () => {
+        if (blobUrl) {
+          URL.revokeObjectURL(blobUrl);
+        }
+      });
     </script>
   </body>
 </html>

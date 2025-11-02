@@ -1,704 +1,879 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>글쓰기 - 커뮤니티</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/style.css" />
     <style>
-        /* contenteditable 에디터 스타일 */
-        .rich-editor {
-            min-height: 400px;
-            max-height: 600px;
-            overflow-y: auto;
-            padding: 15px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            background: white;
-            font-size: 14px;
-            line-height: 1.6;
-            color: #333;
-            outline: none;
-        }
+      /* contenteditable 에디터 스타일 */
+      .rich-editor {
+        min-height: 400px;
+        max-height: 600px;
+        overflow-y: auto;
+        padding: 15px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: white;
+        font-size: 14px;
+        line-height: 1.6;
+        color: #333;
+        outline: none;
+      }
 
-        .rich-editor:focus {
-            border-color: #2196F3;
-            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
-        }
+      .rich-editor:focus {
+        border-color: #2196f3;
+        box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
+      }
 
-        /* placeholder 스타일 */
-        .rich-editor:empty:before {
-            content: attr(data-placeholder);
-            color: #999;
-            cursor: text;
-        }
+      /* placeholder 스타일 */
+      .rich-editor:empty:before {
+        content: attr(data-placeholder);
+        color: #999;
+        cursor: text;
+      }
 
-        /* 이미지 컨테이너 */
-        .image-wrapper {
-            position: relative;
-            display: inline-block;
-            margin: 10px 0;
-            max-width: 100%;
-            min-width: 100px;
-        }
+      /* 이미지 컨테이너 */
+      .image-wrapper {
+        position: relative;
+        display: inline-block;
+        margin: 10px 0;
+        max-width: 100%;
+        min-width: 100px;
+      }
 
-        /* 에디터 내부 이미지 스타일 */
-        .rich-editor img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-            display: block;
-            transition: box-shadow 0.2s;
-        }
+      /* 에디터 내부 이미지 스타일 */
+      .rich-editor img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        display: block;
+        transition: box-shadow 0.2s;
+      }
 
-        .rich-editor img:hover {
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
+      .rich-editor img:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      }
 
-        /* 이미지 선택 시 */
-        .image-wrapper.selected {
-            outline: 3px solid #2196F3;
-            outline-offset: 2px;
-        }
+      /* 이미지 선택 시 */
+      .image-wrapper.selected {
+        outline: 3px solid #2196f3;
+        outline-offset: 2px;
+      }
 
-        .image-wrapper.selected img {
-            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
-        }
+      .image-wrapper.selected img {
+        box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
+      }
 
-        /* 삭제 버튼 */
-        .image-delete-btn {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: #f44336;
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 32px;
-            height: 32px;
-            font-size: 18px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            opacity: 0;
-            transition: opacity 0.2s;
-            z-index: 10;
-        }
+      /* 삭제 버튼 */
+      .image-delete-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: #f44336;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+        z-index: 10;
+      }
 
-        .image-wrapper:hover .image-delete-btn,
-        .image-wrapper.selected .image-delete-btn {
-            opacity: 1;
-        }
+      .image-wrapper:hover .image-delete-btn,
+      .image-wrapper.selected .image-delete-btn {
+        opacity: 1;
+      }
 
-        .image-delete-btn:hover {
-            background: #d32f2f;
-            transform: scale(1.1);
-        }
+      .image-delete-btn:hover {
+        background: #d32f2f;
+        transform: scale(1.1);
+      }
 
-        /* 리사이즈 영역 (오른쪽 하단 모서리) */
-        .image-wrapper::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 30px;
-            height: 30px;
-            cursor: nwse-resize;
-            z-index: 5;
-        }
+      /* 리사이즈 영역 (오른쪽 하단 모서리) */
+      .image-wrapper::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 30px;
+        height: 30px;
+        cursor: nwse-resize;
+        z-index: 5;
+      }
 
-        /* 리사이징 중 */
-        .image-wrapper.resizing {
-            outline: 3px dashed #2196F3;
-        }
+      /* 리사이징 중 */
+      .image-wrapper.resizing {
+        outline: 3px dashed #2196f3;
+      }
 
-        .image-wrapper.resizing img {
-            pointer-events: none;
-            user-select: none;
-        }
+      .image-wrapper.resizing img {
+        pointer-events: none;
+        user-select: none;
+      }
 
-        /* 에디터 툴바 */
-        .editor-toolbar {
-            margin-top: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+      /* 에디터 툴바 */
+      .editor-toolbar {
+        margin-top: 10px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <main class="main-content">
-        <div class="container">
-            <div class="write-container">
-                <h2 id="pageTitle">게시글 작성</h2>
-                <form id="writeForm" class="write-form">
-                    <div class="form-group">
-                        <label for="postTitle">제목</label>
-                        <input type="text" id="postTitle" required placeholder="제목을 입력하세요">
-                    </div>
-                    <div class="form-group">
-                        <label for="postContent">내용</label>
-                        <div class="content-editor-wrapper">
-                            <div 
-                                id="postContent" 
-                                class="rich-editor"
-                                contenteditable="true" 
-                                data-placeholder="내용을 입력하세요. 이미지를 삽입하려면 아래 버튼을 클릭하세요.">
-                            </div>
-                            <div class="editor-toolbar">
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="triggerImageUpload()">
-                                    📷 이미지 삽입
-                                </button>
-                                <input 
-                                    type="file" 
-                                    id="imageInput" 
-                                    accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
-                                    multiple
-                                    style="display: none;"
-                                    onchange="handleImageSelection(event)">
-                                <small style="color: #666; margin-left: 1rem;">
-                                    이미지는 커서 위치에 삽입됩니다 (최대 5개, 각 5MB)
-                                </small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="form-actions">
-                        <button type="button" class="btn btn-secondary" onclick="goBack()">취소</button>
-                        <button type="submit" class="btn btn-primary" id="submitBtn">등록</button>
-                    </div>
-                </form>
+      <div class="container">
+        <div class="write-container">
+          <h2 id="pageTitle">게시글 작성</h2>
+          <form id="writeForm" class="write-form">
+            <div class="form-group">
+              <label for="postTitle"
+                >제목 <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="postTitle"
+                required
+                placeholder="제목을 입력하세요"
+                maxlength="100"
+              />
+              <span class="helper-text">* 최대 100자</span>
+              <span class="error-text" id="titleError"></span>
             </div>
+            <div class="form-group">
+              <label for="postContent"
+                >내용 <span class="required">*</span></label
+              >
+              <div class="content-editor-wrapper">
+                <div
+                  id="postContent"
+                  class="rich-editor"
+                  contenteditable="true"
+                  data-placeholder="내용을 입력하세요. 이미지를 삽입하려면 아래 버튼을 클릭하세요."
+                ></div>
+                <div class="editor-toolbar">
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    onclick="triggerImageUpload()"
+                  >
+                    📷 이미지 삽입
+                  </button>
+                  <input
+                    type="file"
+                    id="imageInput"
+                    accept="image/png, image/jpeg, image/jpg, image/gif, image/webp"
+                    multiple
+                    style="display: none"
+                    onchange="handleImageSelection(event)"
+                  />
+                  <small style="color: #666; margin-left: 1rem">
+                    이미지는 커서 위치에 삽입됩니다 (최대 5개, 각 5MB)
+                  </small>
+                </div>
+              </div>
+              <span class="error-text" id="contentError"></span>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="goBack()"
+              >
+                취소
+              </button>
+              <button type="submit" class="btn btn-primary" id="submitBtn">
+                등록
+              </button>
+            </div>
+          </form>
         </div>
+      </div>
     </main>
-
-    <script src="/js/api.js"></script>
-    <script src="/js/auth.js"></script>
+    <!-- 순서 중요: 클래스 정의 → 초기화 -->
+    <script src="/js/notificationService.js"></script>
+    <script src="/js/apiService.js"></script>
+    <script src="/js/postService.js"></script>
+    <script src="/js/commentService.js"></script>
+    <script src="/js/fileUploadService.js"></script>
+    <script src="/js/userService.js"></script>
+    <script src="/js/authUiManager.js"></script>
+    <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
+    <!-- ✅ 마지막에 초기화 -->
+    <script src="/js/initService.js"></script>
     <script>
-        let editMode = false;
-        let editPostId = null;
-        let originalPost = null;
-        let pendingImageFiles = [];
-        let imageCounter = 0;
+      let editMode = false;
+      let editPostId = null;
+      let originalPost = null;
+      let pendingImageFiles = [];
+      let imageCounter = 0;
+      let blobUrls = new Set(); // ✅ Blob URL 추적
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            authManager.updateUI();
+      document.addEventListener("DOMContentLoaded", async () => {
+        // ✅ UI 업데이트
+        authManager.updateUI();
 
-            if (!authManager.isLoggedIn()) {
-                showError('로그인이 필요합니다.');
-                window.location.href = '/login';
-                return;
+        // ✅ 로그인 확인 개선
+        if (!authManager.isLoggedIn()) {
+          showError("로그인이 필요합니다.");
+          setTimeout(() => {
+            window.location.href = "/login";
+          }, 1500);
+          return;
+        }
+
+        const urlParams = new URLSearchParams(window.location.search);
+        editPostId = urlParams.get("id");
+
+        if (editPostId) {
+          editMode = true;
+          document.getElementById("pageTitle").textContent = "게시글 수정";
+          document.getElementById("submitBtn").textContent = "수정";
+          await loadPostForEdit(editPostId);
+        }
+
+        setupForm();
+        setupEditorEvents();
+        setupValidation();
+      });
+
+      // ✅ 유효성 검사 설정
+      function setupValidation() {
+        const titleInput = document.getElementById("postTitle");
+
+        titleInput.addEventListener("blur", validateTitle);
+        titleInput.addEventListener("input", () =>
+          clearFieldError(titleInput, "titleError")
+        );
+      }
+
+      // ✅ 필드 에러 표시
+      function showFieldError(input, errorId, message) {
+        input.classList.add("error");
+        const errorElement = document.getElementById(errorId);
+        if (errorElement) {
+          errorElement.textContent = message;
+          errorElement.classList.add("show");
+        }
+      }
+
+      // ✅ 필드 에러 제거
+      function clearFieldError(input, errorId) {
+        input.classList.remove("error");
+        const errorElement = document.getElementById(errorId);
+        if (errorElement) {
+          errorElement.textContent = "";
+          errorElement.classList.remove("show");
+        }
+      }
+
+      // ✅ 제목 유효성 검사
+      function validateTitle() {
+        const titleInput = document.getElementById("postTitle");
+        const title = titleInput.value.trim();
+
+        clearFieldError(titleInput, "titleError");
+
+        if (title.length === 0) {
+          showFieldError(titleInput, "titleError", "제목을 입력하세요.");
+          return false;
+        }
+
+        if (title.length > 100) {
+          showFieldError(
+            titleInput,
+            "titleError",
+            "제목은 100자 이하여야 합니다."
+          );
+          return false;
+        }
+
+        return true;
+      }
+
+      // ✅ 내용 유효성 검사
+      function validateContent() {
+        const editor = document.getElementById("postContent");
+        const content = getEditorContent();
+
+        if (!content || content.trim().length === 0) {
+          showError("내용을 입력하세요.");
+          return false;
+        }
+
+        return true;
+      }
+
+      async function loadPostForEdit(postId) {
+        try {
+          const post = await postService.getPost(postId);
+          originalPost = post;
+
+          const currentUser = userService.getCurrentUser();
+          const isAuthor =
+            currentUser &&
+            (currentUser.userId === post.user.userId ||
+              currentUser.nickname === post.user.nickname);
+
+          if (!isAuthor) {
+            showError("게시글 작성자만 수정할 수 있습니다.");
+            setTimeout(() => {
+              window.location.href = `/posts/${postId}`;
+            }, 1500);
+            return;
+          }
+
+          document.getElementById("postTitle").value = post.title;
+
+          const editor = document.getElementById("postContent");
+          editor.innerHTML = convertMarkdownToHtml(post.body || "");
+
+          addDeleteButtonsToExistingImages();
+        } catch (error) {
+          console.error("게시글 로드 실패:", error);
+
+          // ✅ 401 에러 처리
+          if (error.status === 401) {
+            showError("로그인이 필요합니다.");
+            setTimeout(() => {
+              window.location.href = "/login";
+            }, 1500);
+          } else if (error.status === 403) {
+            showError("권한이 없습니다.");
+            setTimeout(() => {
+              window.location.href = "/posts";
+            }, 1500);
+          } else {
+            showError("게시글을 불러오는데 실패했습니다.");
+            setTimeout(() => {
+              window.location.href = "/posts";
+            }, 1500);
+          }
+        }
+      }
+
+      function addDeleteButtonsToExistingImages() {
+        const editor = document.getElementById("postContent");
+
+        const wrappers = editor.querySelectorAll(".image-wrapper");
+        wrappers.forEach((wrapper) => {
+          if (wrapper.querySelector(".image-delete-btn")) {
+            return;
+          }
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "image-delete-btn";
+          deleteBtn.textContent = "×";
+          deleteBtn.type = "button";
+          deleteBtn.setAttribute("contenteditable", "false");
+
+          deleteBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (confirm("이미지를 삭제하시겠습니까?")) {
+              wrapper.remove();
             }
+          });
 
-            const urlParams = new URLSearchParams(window.location.search);
-            editPostId = urlParams.get('id');
-
-            if (editPostId) {
-                editMode = true;
-                document.getElementById('pageTitle').textContent = '게시글 수정';
-                document.getElementById('submitBtn').textContent = '수정';
-                await loadPostForEdit(editPostId);
-            }
-
-            setupForm();
-            setupEditorEvents();
+          wrapper.insertBefore(deleteBtn, wrapper.firstChild);
+          wrapper.setAttribute("contenteditable", "false");
         });
 
-        async function loadPostForEdit(postId) {
-            try {
-                const post = await api.getPost(postId);
-                originalPost = post;
-                
-                const currentUser = authManager.getCurrentUser();
-                const isAuthor = currentUser && 
-                    (currentUser.userId === post.user.userId || 
-                     currentUser.nickname === post.user.nickname);
-                
-                if (!isAuthor) {
-                    showError('게시글 작성자만 수정할 수 있습니다.');
-                    window.location.href = `/posts/${postId}`;
-                    return;
-                }
-                
-                document.getElementById('postTitle').value = post.title;
-                
-                // 마크다운을 HTML로 변환하여 에디터에 표시
-                const editor = document.getElementById('postContent');
-                editor.innerHTML = convertMarkdownToHtml(post.body || '');
-                
-                // ✅ 수정 모드: 기존 이미지에 삭제 버튼 추가
-                addDeleteButtonsToExistingImages();
-                
-            } catch (error) {
-                console.error('게시글 로드 실패:', error);
-                showError('게시글을 불러오는데 실패했습니다.');
-                window.location.href = '/posts';
+        const standaloneImages = editor.querySelectorAll(
+          "img:not(.image-wrapper img)"
+        );
+        standaloneImages.forEach((img) => {
+          const src = img.getAttribute("src");
+          const alt = img.getAttribute("alt") || "이미지";
+
+          const existingWidth = img.style.width || img.getAttribute("width");
+
+          const wrapper = document.createElement("div");
+          wrapper.className = "image-wrapper";
+          wrapper.setAttribute("contenteditable", "false");
+
+          if (existingWidth) {
+            wrapper.style.width = existingWidth.includes("px")
+              ? existingWidth
+              : existingWidth + "px";
+          }
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "image-delete-btn";
+          deleteBtn.textContent = "×";
+          deleteBtn.type = "button";
+          deleteBtn.setAttribute("contenteditable", "false");
+          deleteBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (confirm("이미지를 삭제하시겠습니까?")) {
+              wrapper.remove();
             }
+          });
+
+          const newImg = document.createElement("img");
+          newImg.src = src;
+          newImg.alt = alt;
+          newImg.style.width = "100%";
+          newImg.style.height = "auto";
+
+          wrapper.appendChild(deleteBtn);
+          wrapper.appendChild(newImg);
+
+          img.parentNode.replaceChild(wrapper, img);
+        });
+      }
+
+      function convertMarkdownToHtml(content) {
+        if (!content) return "";
+
+        if (content.includes("<img") || content.includes("<div")) {
+          return content;
         }
 
-        // ✅ 기존 이미지에 삭제 버튼 추가 (수정 모드용)
-        function addDeleteButtonsToExistingImages() {
-            const editor = document.getElementById('postContent');
-            
-            // 1. image-wrapper가 있는 이미지 처리
-            const wrappers = editor.querySelectorAll('.image-wrapper');
-            wrappers.forEach(wrapper => {
-                // 이미 삭제 버튼이 있으면 건너뛰기
-                if (wrapper.querySelector('.image-delete-btn')) {
-                    return;
-                }
-                
-                // 삭제 버튼 생성
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'image-delete-btn';
-                deleteBtn.textContent = '×';
-                deleteBtn.type = 'button';
-                deleteBtn.setAttribute('contenteditable', 'false');
-                
-                // 삭제 버튼 클릭 이벤트
-                deleteBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    wrapper.remove();
-                });
-                
-                // 래퍼에 삭제 버튼 추가
-                wrapper.insertBefore(deleteBtn, wrapper.firstChild);
-                
-                // contenteditable 속성 설정
-                wrapper.setAttribute('contenteditable', 'false');
-            });
-            
-            // 2. wrapper가 없는 독립 img 태그 처리 (마크다운에서 변환된 경우)
-            const standaloneImages = editor.querySelectorAll('img:not(.image-wrapper img)');
-            standaloneImages.forEach(img => {
-                const src = img.getAttribute('src');
-                const alt = img.getAttribute('alt') || '이미지';
-                
-                // ✅ 기존 이미지의 크기 정보 가져오기
-                const existingWidth = img.style.width || img.getAttribute('width');
-                const existingHeight = img.style.height || img.getAttribute('height');
-                
-                // image-wrapper로 감싸기
-                const wrapper = document.createElement('div');
-                wrapper.className = 'image-wrapper';
-                wrapper.setAttribute('contenteditable', 'false');
-                
-                // ✅ 크기 정보가 있으면 wrapper에 적용
-                if (existingWidth) {
-                    wrapper.style.width = existingWidth.includes('px') ? existingWidth : existingWidth + 'px';
-                }
-                
-                // 삭제 버튼 생성
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'image-delete-btn';
-                deleteBtn.textContent = '×';
-                deleteBtn.type = 'button';
-                deleteBtn.setAttribute('contenteditable', 'false');
-                deleteBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (confirm('이미지를 삭제하시겠습니까?')) {
-                        wrapper.remove();
-                    }
-                });
-                
-                // 새 img 태그 생성
-                const newImg = document.createElement('img');
-                newImg.src = src;
-                newImg.alt = alt;
-                newImg.style.width = '100%';
-                newImg.style.height = 'auto';
-                
-                // wrapper 구성
-                wrapper.appendChild(deleteBtn);
-                wrapper.appendChild(newImg);
-                
-                // 기존 img를 wrapper로 교체
-                img.parentNode.replaceChild(wrapper, img);
-            });
-        }
+        let html = content.replace(
+          /!\[(.*?)\]\((.*?)\)/g,
+          (match, alt, url) => {
+            return createImageWrapperHtml(url, alt, url);
+          }
+        );
+        html = html.replace(/\n/g, "<br>");
+        return html;
+      }
 
-        // ✅ 마크다운/HTML을 에디터용 HTML로 변환
-        function convertMarkdownToHtml(content) {
-            if (!content) return '';
-            
-            // 이미 HTML 형식이면 그대로 반환 (새 방식)
-            if (content.includes('<img') || content.includes('<div')) {
-                return content;
-            }
-            
-            // 순수 마크다운이면 변환 (구 방식 호환)
-            let html = content.replace(/!\[(.*?)\]\((.*?)\)/g, (match, alt, url) => {
-                return createImageWrapperHtml(url, alt, url);
-            });
-            html = html.replace(/\n/g, '<br>');
-            return html;
-        }
-
-        // ✅ 이미지 래퍼 HTML 생성
-        function createImageWrapperHtml(src, alt, dataUrl) {
-            return `<div class="image-wrapper" contenteditable="false">
-                <img src="${src}" alt="${escapeHtml(alt)}" data-image-url="${dataUrl}">
+      function createImageWrapperHtml(src, alt, dataUrl) {
+        return `<div class="image-wrapper" contenteditable="false">
+                <img src="${src}" alt="${escapeHtml(
+          alt
+        )}" data-image-url="${dataUrl}">
                 <button class="image-delete-btn" onclick="removeImage(this)" title="이미지 삭제">×</button>
             </div>`;
-        }
+      }
 
-        // ✅ 에디터 이벤트 설정
-        function setupEditorEvents() {
-            const editor = document.getElementById('postContent');
-            
-            // Delete/Backspace 키로 이미지 삭제
-            editor.addEventListener('keydown', (e) => {
-                if (e.key === 'Delete' || e.key === 'Backspace') {
-                    const selection = window.getSelection();
-                    if (selection.rangeCount > 0) {
-                        const range = selection.getRangeAt(0);
-                        const selectedElement = range.commonAncestorContainer;
-                        
-                        // 선택된 요소가 이미지 래퍼인지 확인
-                        let imageWrapper = null;
-                        if (selectedElement.nodeType === Node.ELEMENT_NODE && 
-                            selectedElement.classList.contains('image-wrapper')) {
-                            imageWrapper = selectedElement;
-                        } else if (selectedElement.parentElement && 
-                                   selectedElement.parentElement.classList.contains('image-wrapper')) {
-                            imageWrapper = selectedElement.parentElement;
-                        }
-                        
-                        if (imageWrapper) {
-                            e.preventDefault();
-                            removeImageWrapper(imageWrapper);
-                        }
-                    }
-                }
-            });
+      function setupEditorEvents() {
+        const editor = document.getElementById("postContent");
 
-            // 이미지 래퍼에 마우스다운 이벤트 (리사이즈)
-            editor.addEventListener('mousedown', (e) => {
-                const target = e.target;
-                const wrapper = target.closest('.image-wrapper');
-                
-                if (wrapper) {
-                    const rect = wrapper.getBoundingClientRect();
-                    const offsetX = e.clientX - rect.left;
-                    const offsetY = e.clientY - rect.top;
-                    
-                    // 오른쪽 하단 30px 영역인지 확인
-                    if (offsetX >= rect.width - 30 && offsetY >= rect.height - 30) {
-                        e.preventDefault();
-                        startResize(e, wrapper);
-                    }
-                }
-            });
-        }
-
-        // 이미지 선택 트리거
-        function triggerImageUpload() {
-            document.getElementById('imageInput').click();
-        }
-
-        // ✅ 이미지 파일 선택 처리
-        function handleImageSelection(event) {
-            const files = Array.from(event.target.files);
-            const editor = document.getElementById('postContent');
-            
-            if (pendingImageFiles.length + files.length > 5) {
-                showError('이미지는 최대 5개까지 업로드 가능합니다.');
-                return;
-            }
-            
-            for (const file of files) {
-                if (!validateImageFile(file)) {
-                    continue;
-                }
-                
-                const tempId = `TEMP_IMAGE_${imageCounter++}`;
-                pendingImageFiles.push({ id: tempId, file: file });
-                
-                const tempUrl = URL.createObjectURL(file);
-                
-                // 이미지 래퍼 생성
-                const wrapper = document.createElement('div');
-                wrapper.className = 'image-wrapper';
-                wrapper.setAttribute('contenteditable', 'false');
-                
-                const img = document.createElement('img');
-                img.src = tempUrl;
-                img.alt = file.name;
-                img.dataset.tempId = tempId;
-                
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'image-delete-btn';
-                deleteBtn.innerHTML = '×';
-                deleteBtn.title = '이미지 삭제';
-                deleteBtn.onclick = function() { removeImage(this); };
-                
-                wrapper.appendChild(img);
-                wrapper.appendChild(deleteBtn);
-                
-                insertImageAtCursor(wrapper);
-                
-                const br = document.createElement('br');
-                insertImageAtCursor(br);
-            }
-            
-            event.target.value = '';
-        }
-
-        // ✅ 이미지 삭제 (버튼 클릭)
-        function removeImage(button) {
-            const wrapper = button.parentElement;
-            removeImageWrapper(wrapper);
-        }
-
-        // ✅ 이미지 래퍼 삭제
-        function removeImageWrapper(wrapper) {
-            const img = wrapper.querySelector('img');
-            const tempId = img.dataset.tempId;
-            
-            // pendingImageFiles에서 제거
-            if (tempId) {
-                const index = pendingImageFiles.findIndex(item => item.id === tempId);
-                if (index !== -1) {
-                    // blob URL 해제
-                    URL.revokeObjectURL(img.src);
-                    pendingImageFiles.splice(index, 1);
-                    console.log(`이미지 삭제됨: ${tempId}, 남은 이미지: ${pendingImageFiles.length}개`);
-                }
-            }
-            
-            // DOM에서 제거
-            wrapper.remove();
-            
-
-        }
-
-        // 커서 위치에 요소 삽입
-        function insertImageAtCursor(element) {
+        editor.addEventListener("keydown", (e) => {
+          if (e.key === "Delete" || e.key === "Backspace") {
             const selection = window.getSelection();
             if (selection.rangeCount > 0) {
-                const range = selection.getRangeAt(0);
-                range.deleteContents();
-                range.insertNode(element);
-                
-                range.setStartAfter(element);
-                range.setEndAfter(element);
-                selection.removeAllRanges();
-                selection.addRange(range);
-            } else {
-                document.getElementById('postContent').appendChild(element);
-            }
-        }
+              const range = selection.getRangeAt(0);
+              const selectedElement = range.commonAncestorContainer;
 
-        // 이미지 파일 유효성 검사
-        function validateImageFile(file) {
-            const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/gif', 'image/webp'];
-            
-            if (!validTypes.includes(file.type)) {
-                showError('PNG, JPG, GIF, WEBP 형식의 이미지만 업로드 가능합니다.');
-                return false;
-            }
-            
-            if (file.size > 5 * 1024 * 1024) {
-                showError('이미지 크기는 5MB 이하여야 합니다.');
-                return false;
-            }
-            
-            return true;
-        }
+              let imageWrapper = null;
+              if (
+                selectedElement.nodeType === Node.ELEMENT_NODE &&
+                selectedElement.classList.contains("image-wrapper")
+              ) {
+                imageWrapper = selectedElement;
+              } else if (
+                selectedElement.parentElement &&
+                selectedElement.parentElement.classList.contains(
+                  "image-wrapper"
+                )
+              ) {
+                imageWrapper = selectedElement.parentElement;
+              }
 
-        // ✅ 에디터 내용을 HTML 그대로 가져오기 (크기 정보 보존)
-        function getEditorContent() {
-            const editor = document.getElementById('postContent');
-            
-            // 임시 div를 만들어서 정리
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = editor.innerHTML;
-            
-            // 삭제 버튼만 제거 (저장할 필요 없음)
-            tempDiv.querySelectorAll('.image-delete-btn').forEach(btn => btn.remove());
-            
-            // HTML 그대로 반환 (image-wrapper의 style.width 등 모든 스타일 보존)
-            return tempDiv.innerHTML.trim();
-        }
-
-        // 이미지 업로드
-        async function uploadPendingImages() {
-            if (pendingImageFiles.length === 0) {
-                return [];
-            }
-
-            try {
-                const files = pendingImageFiles.map(item => item.file);
-                const response = await api.uploadImages(files);
-                return response.urls;
-            } catch (error) {
-                console.error('이미지 업로드 실패:', error);
-                throw new Error(error.message || '이미지 업로드에 실패했습니다.');
-            }
-        }
-
-        // ✅ 임시 ID를 실제 URL로 교체 (HTML 방식)
-        function replaceTemporaryIds(content, uploadedUrls) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = content;
-            
-            // data-temp-id를 가진 img 태그 찾아서 실제 URL로 교체
-            pendingImageFiles.forEach((item, index) => {
-                const tempId = item.id;
-                const actualUrl = uploadedUrls[index];
-                
-                const img = tempDiv.querySelector(`img[data-temp-id="${tempId}"]`);
-                if (img) {
-                    img.src = actualUrl;
-                    img.removeAttribute('data-temp-id');
-                }
-            });
-            
-            return tempDiv.innerHTML;
-        }
-
-        // ✅ 본문에서 이미지 URL 추출 (HTML 방식)
-        function extractImageUrls(content) {
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = content;
-            
-            const urls = [];
-            const images = tempDiv.querySelectorAll('img');
-            
-            images.forEach(img => {
-                const src = img.getAttribute('src');
-                // 임시 ID나 blob URL이 아닌 실제 URL만 추출
-                if (src && !src.startsWith('TEMP_IMAGE_') && !src.startsWith('blob:')) {
-                    urls.push(src);
-                }
-            });
-            
-            return urls;
-        }
-
-        function setupForm() {
-            const writeForm = document.getElementById('writeForm');
-            writeForm.addEventListener('submit', async (e) => {
+              if (imageWrapper) {
                 e.preventDefault();
-                
-                const title = document.getElementById('postTitle').value.trim();
-                let body = getEditorContent();
+                removeImageWrapper(imageWrapper);
+              }
+            }
+          }
+        });
 
-                if (!title || !body) {
-                    showError('제목과 내용을 모두 입력해주세요.');
-                    return;
-                }
+        editor.addEventListener("mousedown", (e) => {
+          const target = e.target;
+          const wrapper = target.closest(".image-wrapper");
 
-                const submitBtn = document.getElementById('submitBtn');
-                submitBtn.disabled = true;
-                submitBtn.textContent = editMode ? '수정 중...' : '등록 중...';
+          if (wrapper) {
+            const rect = wrapper.getBoundingClientRect();
+            const offsetX = e.clientX - rect.left;
+            const offsetY = e.clientY - rect.top;
 
-                try {
-                    let uploadedUrls = [];
-                    if (pendingImageFiles.length > 0) {
-                        submitBtn.textContent = '이미지 업로드 중...';
-                        uploadedUrls = await uploadPendingImages();
-                        body = replaceTemporaryIds(body, uploadedUrls);
-                    }
+            if (offsetX >= rect.width - 30 && offsetY >= rect.height - 30) {
+              e.preventDefault();
+              startResize(e, wrapper);
+            }
+          }
+        });
+      }
 
-                    const imageUrls = extractImageUrls(body);
-                    
-                    console.log('최종 body:', body);
-                    console.log('최종 imageUrls:', imageUrls);
+      function triggerImageUpload() {
+        document.getElementById("imageInput").click();
+      }
 
-                    submitBtn.textContent = editMode ? '게시글 수정 중...' : '게시글 등록 중...';
-                    
-                    if (editMode) {
-                        await api.updatePost(editPostId, title, body, imageUrls);
-                        showSuccess('게시글이 수정되었습니다.');
-                        
-                        setTimeout(() => {
-                            window.location.href = `/posts/${editPostId}`;
-                        }, 1000);
-                    } else {
-                        await api.createPost(title, body, imageUrls);
-                        showSuccess('게시글이 작성되었습니다.');
-                        
-                        setTimeout(() => {
-                            window.location.href = '/posts';
-                        }, 1000);
-                    }
-                } catch (error) {
-                    console.error('게시글 처리 실패:', error);
-                    showError(error.message || '게시글 처리에 실패했습니다.');
-                    submitBtn.disabled = false;
-                    submitBtn.textContent = editMode ? '수정' : '등록';
-                }
-            });
+      function handleImageSelection(event) {
+        const files = Array.from(event.target.files);
+        const editor = document.getElementById("postContent");
+
+        if (pendingImageFiles.length + files.length > 5) {
+          showError("이미지는 최대 5개까지 업로드 가능합니다.");
+          event.target.value = "";
+          return;
         }
 
-        function goBack() {
-            if (editMode && editPostId) {
+        for (const file of files) {
+          if (!validateImageFile(file)) {
+            continue;
+          }
+
+          const tempId = `TEMP_IMAGE_${imageCounter++}`;
+          pendingImageFiles.push({ id: tempId, file: file });
+
+          // ✅ Blob URL 생성 및 추적
+          const tempUrl = URL.createObjectURL(file);
+          blobUrls.add(tempUrl);
+
+          const wrapper = document.createElement("div");
+          wrapper.className = "image-wrapper";
+          wrapper.setAttribute("contenteditable", "false");
+
+          const img = document.createElement("img");
+          img.src = tempUrl;
+          img.alt = file.name;
+          img.dataset.tempId = tempId;
+
+          const deleteBtn = document.createElement("button");
+          deleteBtn.className = "image-delete-btn";
+          deleteBtn.innerHTML = "×";
+          deleteBtn.title = "이미지 삭제";
+          deleteBtn.onclick = function () {
+            removeImage(this);
+          };
+
+          wrapper.appendChild(img);
+          wrapper.appendChild(deleteBtn);
+
+          insertImageAtCursor(wrapper);
+
+          const br = document.createElement("br");
+          insertImageAtCursor(br);
+        }
+
+        event.target.value = "";
+      }
+
+      function removeImage(button) {
+        const wrapper = button.parentElement;
+        removeImageWrapper(wrapper);
+      }
+
+      function removeImageWrapper(wrapper) {
+        const img = wrapper.querySelector("img");
+        const tempId = img.dataset.tempId;
+        const blobUrl = img.src;
+
+        // ✅ Blob URL 해제
+        if (blobUrl && blobUrl.startsWith("blob:")) {
+          URL.revokeObjectURL(blobUrl);
+          blobUrls.delete(blobUrl);
+        }
+
+        if (tempId) {
+          const index = pendingImageFiles.findIndex(
+            (item) => item.id === tempId
+          );
+          if (index !== -1) {
+            pendingImageFiles.splice(index, 1);
+            console.log(
+              `이미지 삭제됨: ${tempId}, 남은 이미지: ${pendingImageFiles.length}개`
+            );
+          }
+        }
+
+        wrapper.remove();
+      }
+
+      function insertImageAtCursor(element) {
+        const selection = window.getSelection();
+        if (selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          range.deleteContents();
+          range.insertNode(element);
+
+          range.setStartAfter(element);
+          range.setEndAfter(element);
+          selection.removeAllRanges();
+          selection.addRange(range);
+        } else {
+          document.getElementById("postContent").appendChild(element);
+        }
+      }
+
+      function validateImageFile(file) {
+        const validTypes = [
+          "image/png",
+          "image/jpeg",
+          "image/jpg",
+          "image/gif",
+          "image/webp",
+        ];
+
+        if (!validTypes.includes(file.type)) {
+          showError("PNG, JPG, GIF, WEBP 형식의 이미지만 업로드 가능합니다.");
+          return false;
+        }
+
+        if (file.size > 5 * 1024 * 1024) {
+          showError("이미지 크기는 5MB 이하여야 합니다.");
+          return false;
+        }
+
+        return true;
+      }
+
+      function getEditorContent() {
+        const editor = document.getElementById("postContent");
+
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = editor.innerHTML;
+
+        tempDiv
+          .querySelectorAll(".image-delete-btn")
+          .forEach((btn) => btn.remove());
+
+        return tempDiv.innerHTML.trim();
+      }
+
+      async function uploadPendingImages() {
+        if (pendingImageFiles.length === 0) {
+          return [];
+        }
+
+        try {
+          const files = pendingImageFiles.map((item) => item.file);
+          const response = await fileUploadService.uploadImages(files);
+          return response.urls;
+        } catch (error) {
+          console.error("이미지 업로드 실패:", error);
+          throw new Error(error.message || "이미지 업로드에 실패했습니다.");
+        }
+      }
+
+      function replaceTemporaryIds(content, uploadedUrls) {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = content;
+
+        pendingImageFiles.forEach((item, index) => {
+          const tempId = item.id;
+          const actualUrl = uploadedUrls[index];
+
+          const img = tempDiv.querySelector(`img[data-temp-id="${tempId}"]`);
+          if (img) {
+            img.src = actualUrl;
+            img.removeAttribute("data-temp-id");
+          }
+        });
+
+        return tempDiv.innerHTML;
+      }
+
+      function extractImageUrls(content) {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = content;
+
+        const urls = [];
+        const images = tempDiv.querySelectorAll("img");
+
+        images.forEach((img) => {
+          const src = img.getAttribute("src");
+          if (
+            src &&
+            !src.startsWith("TEMP_IMAGE_") &&
+            !src.startsWith("blob:")
+          ) {
+            urls.push(src);
+          }
+        });
+
+        return urls;
+      }
+
+      function setupForm() {
+        const writeForm = document.getElementById("writeForm");
+        writeForm.addEventListener("submit", async (e) => {
+          e.preventDefault();
+
+          // ✅ 유효성 검사
+          if (!validateTitle() || !validateContent()) {
+            return;
+          }
+
+          const title = document.getElementById("postTitle").value.trim();
+          let body = getEditorContent();
+
+          const submitBtn = document.getElementById("submitBtn");
+          submitBtn.disabled = true;
+          submitBtn.textContent = editMode ? "수정 중..." : "등록 중...";
+
+          try {
+            let uploadedUrls = [];
+            if (pendingImageFiles.length > 0) {
+              submitBtn.textContent = "이미지 업로드 중...";
+              uploadedUrls = await uploadPendingImages();
+              body = replaceTemporaryIds(body, uploadedUrls);
+            }
+
+            const imageUrls = extractImageUrls(body);
+
+            console.log("최종 body:", body);
+            console.log("최종 imageUrls:", imageUrls);
+
+            submitBtn.textContent = editMode
+              ? "게시글 수정 중..."
+              : "게시글 등록 중...";
+
+            if (editMode) {
+              await postService.updatePost(editPostId, title, body, imageUrls);
+              showSuccess("게시글이 수정되었습니다.");
+
+              // ✅ Blob URL 정리
+              cleanupBlobUrls();
+
+              setTimeout(() => {
                 window.location.href = `/posts/${editPostId}`;
+              }, 1000);
             } else {
-                window.location.href = '/posts';
+              const response = await postService.createPost(title, body, imageUrls);
+              showSuccess("게시글이 작성되었습니다.");
+
+              // ✅ Blob URL 정리
+              cleanupBlobUrls();
+
+              setTimeout(() => {
+                window.location.href = "/posts";
+              }, 1000);
             }
-        }
+          } catch (error) {
+            console.error("게시글 처리 실패:", error);
 
-        // ✅ 이미지 리사이즈 변수
-        let resizingWrapper = null;
-        let resizeStartX = 0;
-        let resizeStartWidth = 0;
+            // ✅ 에러 처리
+            let errorMessage = "게시글 처리에 실패했습니다.";
 
-        // ✅ 리사이즈 시작
-        function startResize(event, wrapper) {
-            event.preventDefault();
-            event.stopPropagation();
-            
-            resizingWrapper = wrapper;
-            resizingWrapper.classList.add('resizing');
-            
-            resizeStartX = event.clientX;
-            resizeStartWidth = resizingWrapper.offsetWidth;
-            
-            // 마우스 이벤트 리스너 추가
-            document.addEventListener('mousemove', doResize);
-            document.addEventListener('mouseup', stopResize);
-        }
-
-        // ✅ 리사이즈 중
-        function doResize(event) {
-            if (!resizingWrapper) return;
-            
-            const deltaX = event.clientX - resizeStartX;
-            const newWidth = resizeStartWidth + deltaX;
-            
-            // 최소/최대 크기 제한
-            const minWidth = 100;
-            const maxWidth = resizingWrapper.parentElement.offsetWidth - 30;
-            
-            if (newWidth >= minWidth && newWidth <= maxWidth) {
-                resizingWrapper.style.width = newWidth + 'px';
+            if (error.status === 401) {
+              errorMessage = "로그인이 필요합니다.";
+            } else if (error.status === 403) {
+              errorMessage = "권한이 없습니다.";
+            } else if (error.status === 400) {
+              errorMessage = error.message || "입력 내용을 확인해주세요.";
+            } else if (error.message) {
+              errorMessage = error.message;
             }
+
+            showError(errorMessage);
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = editMode ? "수정" : "등록";
+          }
+        });
+      }
+
+      // ✅ Blob URL 정리
+      function cleanupBlobUrls() {
+        blobUrls.forEach((url) => {
+          URL.revokeObjectURL(url);
+        });
+        blobUrls.clear();
+        console.log("Blob URL 정리 완료");
+      }
+
+      function goBack() {
+        const title = document.getElementById("postTitle").value.trim();
+        const content = getEditorContent();
+
+        // ✅ 변경사항 확인
+        if (title || content) {
+          if (!confirm("작성 중인 내용이 있습니다. 정말 취소하시겠습니까?")) {
+            return;
+          }
         }
 
-        // ✅ 리사이즈 종료
-        function stopResize() {
-            if (resizingWrapper) {
-                resizingWrapper.classList.remove('resizing');
-                resizingWrapper = null;
-            }
-            
-            document.removeEventListener('mousemove', doResize);
-            document.removeEventListener('mouseup', stopResize);
+        // ✅ Blob URL 정리
+        cleanupBlobUrls();
+
+        if (editMode && editPostId) {
+          window.location.href = `/posts/${editPostId}`;
+        } else {
+          window.location.href = "/posts";
+        }
+      }
+
+      // ✅ 페이지 언로드 시 Blob URL 정리
+      window.addEventListener("beforeunload", (e) => {
+        const title = document.getElementById("postTitle").value.trim();
+        const content = getEditorContent();
+
+        // 변경사항이 있으면 확인
+        if (title || content) {
+          e.preventDefault();
+          e.returnValue = "";
         }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
+        // Blob URL 정리
+        cleanupBlobUrls();
+      });
+
+      // ✅ 이미지 리사이즈 변수
+      let resizingWrapper = null;
+      let resizeStartX = 0;
+      let resizeStartWidth = 0;
+
+      function startResize(event, wrapper) {
+        event.preventDefault();
+        event.stopPropagation();
+
+        resizingWrapper = wrapper;
+        resizingWrapper.classList.add("resizing");
+
+        resizeStartX = event.clientX;
+        resizeStartWidth = resizingWrapper.offsetWidth;
+
+        document.addEventListener("mousemove", doResize);
+        document.addEventListener("mouseup", stopResize);
+      }
+
+      function doResize(event) {
+        if (!resizingWrapper) return;
+
+        const deltaX = event.clientX - resizeStartX;
+        const newWidth = resizeStartWidth + deltaX;
+
+        const minWidth = 100;
+        const maxWidth = resizingWrapper.parentElement.offsetWidth - 30;
+
+        if (newWidth >= minWidth && newWidth <= maxWidth) {
+          resizingWrapper.style.width = newWidth + "px";
         }
+      }
+
+      function stopResize() {
+        if (resizingWrapper) {
+          resizingWrapper.classList.remove("resizing");
+          resizingWrapper = null;
+        }
+
+        document.removeEventListener("mousemove", doResize);
+        document.removeEventListener("mouseup", stopResize);
+      }
+
+      function escapeHtml(text) {
+        if (!text) return "";
+        const div = document.createElement("div");
+        div.textContent = text;
+        return div.innerHTML;
+      }
     </script>
-</body>
+  </body>
 </html>
