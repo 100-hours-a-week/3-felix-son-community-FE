@@ -4,12 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>로그인 - 커뮤니티</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/base.css">
+    <link rel="stylesheet" href="/css/components.css">
+    <link rel="stylesheet" href="/css/pages.css">
   </head>
   <body>
     <main class="main-content">
       <div class="container">
-        <div class="auth-container">
+        <div class="login-container">
           <h2>로그인</h2>
 
           <form id="loginForm" class="auth-form">
@@ -20,6 +22,7 @@
                 id="email"
                 required
                 placeholder="이메일을 입력하세요"
+                autocomplete="email"
               />
             </div>
 
@@ -30,6 +33,7 @@
                 id="password"
                 required
                 placeholder="비밀번호를 입력하세요"
+                autocomplete="current-password"
               />
             </div>
 
@@ -44,29 +48,46 @@
         </div>
       </div>
     </main>
-
+     <!-- ✅ JavaScript 로드 -->
     <script src="/js/api.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/layout.js"></script>
     <script>
-      document.addEventListener("DOMContentLoaded", () => {
-        authManager.updateUI();
+      document.addEventListener("DOMContentLoaded", async () => {
+        console.log("로그인 페이지 초기화");
 
-        // 이미 로그인되어 있으면 홈으로 리다이렉트
-        if (authManager.isLoggedIn()) {
-          window.location.href = "/";
-          return;
+        try {
+          // ✅ 1. authManager 초기화 대기
+          await authManager.init();
+          
+          // ✅ 2. 이미 로그인되어 있는지 확인
+          if (authManager.isLoggedIn()) {
+            console.log("이미 로그인된 사용자 - 리다이렉트");
+            
+            // URL에서 returnUrl 파라미터 확인
+            const params = new URLSearchParams(window.location.search);
+            const returnUrl = params.get('returnUrl') || '/';
+            
+            window.location.href = returnUrl;
+            return;
+          }
+
+          // ✅ 3. 로그인 폼 설정
+          setupLoginForm();
+          
+        } catch (error) {
+          console.error("페이지 초기화 실패:", error);
         }
-
-        setupLoginForm();
       });
 
       function setupLoginForm() {
         const form = document.getElementById("loginForm");
+        const submitButton = form.querySelector('button[type="submit"]');
 
         form.addEventListener("submit", async (e) => {
           e.preventDefault();
 
+          // ✅ 입력값 가져오기 및 검증
           const email = document.getElementById("email").value.trim();
           const password = document.getElementById("password").value;
 
@@ -75,57 +96,53 @@
             return;
           }
 
+          // ✅ 이메일 형식 검증
+          const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+          if (!emailRegex.test(email)) {
+            showError("올바른 이메일 형식을 입력해주세요.");
+            return;
+          }
+
+          // ✅ 버튼 비활성화 (중복 제출 방지)
+          submitButton.disabled = true;
+          submitButton.textContent = "로그인 중...";
+
           try {
-            console.log("로그인 요청:", { email });
+            console.log("로그인 시도:", { email });
 
-            // ✅ api.login() 직접 호출 (accountRestored 확인을 위해)
-            const response = await api.login(email, password);
+            // ✅ authManager.login() 호출 (세션 쿠키는 서버가 자동 설정)
+            const success = await authManager.login(email, password);
 
-            console.log("로그인 성공:", response);
+            if (success) {
+              console.log("로그인 성공 - 리다이렉트 준비");
 
-          
+              // ✅ returnUrl 파라미터 확인
+              const params = new URLSearchParams(window.location.search);
+              const returnUrl = params.get('returnUrl') || '/';
+              
+              console.log("리다이렉트 대상:", returnUrl);
 
-            // ✅ 토큰 저장 (auth.js의 setToken 사용)
-            authManager.setToken(response.accessToken);
-
-            // ✅ refreshToken 저장
-            if (response.refreshToken) {
-              localStorage.setItem("refreshToken", response.refreshToken);
-            }
-
-            // ✅ 사용자 정보 저장 (setUser 사용, setUserInfo 아님!)
-            const userInfo = {
-              userId: response.userId,
-              email: response.email,
-              nickname: response.nickname,
-              profileImageUrl: response.profileImageUrl,
-            };
-            authManager.setUser(userInfo);
-
-            // ✅ UI 업데이트
-            authManager.updateUI();
-
-            // ✅ 계정 복구 시 특별 메시지, 일반 로그인 시 기본 메시지
-            if (response.accountRestored === true) {
-              showSuccess(
-                "계정이 복구되었습니다! 다시 돌아오신 것을 환영합니다. 😊"
-              );
+              // ✅ 짧은 딜레이 후 리다이렉트 (성공 메시지 표시 시간)
+              setTimeout(() => {
+                window.location.href = returnUrl;
+              }, 1000);
             } else {
-              showSuccess("로그인되었습니다!");
+              // 로그인 실패 (authManager에서 이미 에러 표시함)
+              submitButton.disabled = false;
+              submitButton.textContent = "로그인";
             }
-
-            setTimeout(() => {
-              window.location.href = "/";
-            }, 1500);
           } catch (error) {
-            console.error("로그인 실패:", error);
+            console.error("로그인 처리 중 오류:", error);
+            
+            // ✅ 에러 메시지 표시
             showError(error.message || "로그인에 실패했습니다.");
+            
+            // ✅ 버튼 재활성화
+            submitButton.disabled = false;
+            submitButton.textContent = "로그인";
           }
         });
       }
-
     </script>
-
-    
   </body>
 </html>

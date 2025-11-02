@@ -4,82 +4,84 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>게시글 목록 - 커뮤니티</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
 </head>
 <body>
-    <!-- 메인 콘텐츠 영역 -->
     <main class="main-content">
         <div class="container">
             <div class="section-header">
                 <h2>게시글 목록</h2>
-                <!-- ✅ style="display: none;" 제거 -->
-                <a href="/posts/write" class="btn btn-primary" id="writePostBtn">
+                <!-- ✅ 단순 링크, JavaScript 없음 -->
+                <a href="/posts/write" class="btn btn-primary" id="writePostBtn" style="display: none;">
                     글쓰기
                 </a>
             </div>
             
-            <!-- 전체 게시글 수 정보 -->
             <div id="pageInfo" class="page-info"></div>
-            
-            <!-- 게시글 목록 -->
-            <div id="postList" class="post-list">
-                <!-- 게시글이 동적으로 로드됩니다 -->
-            </div>
+            <div id="postList" class="post-list"></div>
 
-            <!-- 로딩 인디케이터 -->
             <div id="loadingIndicator" class="loading-indicator" style="display: none;">
                 <div class="loading-spinner"></div>
                 <p>게시글을 불러오는 중...</p>
             </div>
 
-            <!-- 마지막 페이지 메시지 -->
             <div id="endMessage" class="end-message" style="display: none;">
                 <p>모든 게시글을 불러왔습니다 ✓</p>
             </div>
         </div>
     </main>
 
-    <!-- JavaScript 파일들 -->
     <script src="/js/api.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/layout.js"></script>
     <script>
-        // 전역 변수
         let currentPage = 0;
         let isLoading = false;
         let isLastPage = false;
         let totalElements = 0;
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // 네비게이션 업데이트
-            authManager.updateUI();
+            console.log("게시글 목록 페이지 초기화");
 
-            // ✅ 글쓰기 버튼 표시 여부 설정
-            updateWriteButton();
+            try {
+                await authManager.init();
+                
+                console.log("로그인 상태:", authManager.isLoggedIn());
 
-            // 초기 게시글 로드
-            await loadPosts();
-
-            // 스크롤 이벤트 리스너 등록
-            window.addEventListener('scroll', handleScroll);
+                // ✅ 로그인 상태에 따라 글쓰기 버튼 표시
+                updateWriteButton();
+                
+                await loadPosts();
+                window.addEventListener('scroll', handleScroll);
+                
+            } catch (error) {
+                console.error("페이지 초기화 실패:", error);
+            }
         });
 
-        // ✅ 글쓰기 버튼 표시 함수
         function updateWriteButton() {
             const writeBtn = document.getElementById('writePostBtn');
-            if (authManager.isLoggedIn()) {
+            
+            if (!writeBtn) {
+                console.error("writePostBtn 요소를 찾을 수 없습니다.");
+                return;
+            }
+            
+            const isLoggedIn = authManager.isLoggedIn();
+            console.log("글쓰기 버튼 업데이트:", isLoggedIn ? "표시" : "숨김");
+            
+            if (isLoggedIn) {
                 writeBtn.style.display = 'inline-block';
             } else {
                 writeBtn.style.display = 'none';
             }
         }
 
-        // 스크롤 이벤트 핸들러
         function handleScroll() {
-            // 이미 로딩 중이거나 마지막 페이지면 중단
             if (isLoading || isLastPage) return;
 
-            // 페이지 하단 근처 도달 확인 (하단 100px 이내)
             const scrollPosition = window.innerHeight + window.scrollY;
             const pageHeight = document.documentElement.scrollHeight;
 
@@ -88,9 +90,7 @@
             }
         }
 
-        // 게시글 로드 함수
         async function loadPosts() {
-            // 중복 요청 방지
             if (isLoading || isLastPage) return;
 
             try {
@@ -99,7 +99,6 @@
 
                 const response = await api.getPosts(currentPage, 10);
                 
-                // 첫 로드 시 전체 게시글 수 표시
                 if (currentPage === 0) {
                     totalElements = response.totalElements;
                     displayPageInfo(response);
@@ -107,7 +106,6 @@
 
                 const posts = response.content;
 
-                // 게시글이 없는 경우 (첫 페이지)
                 if (currentPage === 0 && posts.length === 0) {
                     const postList = document.getElementById('postList');
                     postList.innerHTML = '<div class="no-posts">게시글이 없습니다.</div>';
@@ -116,15 +114,13 @@
                     return;
                 }
 
-                // 게시글 렌더링 (기존 목록에 추가)
                 appendPosts(posts);
 
-                // 마지막 페이지 체크
                 if (response.last) {
                     isLastPage = true;
                     showEndMessage();
                 } else {
-                    currentPage++; // 다음 페이지 준비
+                    currentPage++;
                 }
 
             } catch (error) {
@@ -140,12 +136,10 @@
             }
         }
 
-        // 게시글을 목록에 추가
         function appendPosts(posts) {
             const postList = document.getElementById('postList');
             
             const postsHTML = posts.map(post => {
-                // 안전하게 user 데이터 접근
                 const user = post.user || {};
                 const nickname = user.nickname || '익명';
                 const profileImageUrl = user.profileImageUrl;
@@ -156,7 +150,7 @@
                         <div class="post-header">
                             <div class="post-author-info">
                                 ${profileImageUrl ? 
-                                    `<img src="${profileImageUrl}" 
+                                    `<img src="${escapeHtml(profileImageUrl)}" 
                                           alt="${escapeHtml(nickname)}" 
                                           class="author-avatar-small"
                                           onerror="this.style.display='none'">` 
@@ -178,7 +172,6 @@
                 `;
             }).join('');
 
-            // 첫 페이지면 교체, 아니면 추가
             if (currentPage === 0) {
                 postList.innerHTML = postsHTML;
             } else {
@@ -186,7 +179,6 @@
             }
         }
 
-        // 전체 게시글 수 표시
         function displayPageInfo(response) {
             const pageInfo = document.getElementById('pageInfo');
             pageInfo.innerHTML = `
@@ -194,30 +186,31 @@
             `;
         }
 
-        // 로딩 인디케이터 표시
         function showLoadingIndicator() {
             const indicator = document.getElementById('loadingIndicator');
             indicator.style.display = 'block';
         }
 
-        // 로딩 인디케이터 숨김
         function hideLoadingIndicator() {
             const indicator = document.getElementById('loadingIndicator');
             indicator.style.display = 'none';
         }
 
-        // 마지막 페이지 메시지 표시
         function showEndMessage() {
             const endMessage = document.getElementById('endMessage');
             endMessage.style.display = 'block';
         }
 
-        // 유틸리티 함수들
         function getPreview(content, maxLength = 150) {
             if (!content) return '';
-            return content.length > maxLength 
-                ? content.substring(0, maxLength) + '...' 
-                : content;
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = content;
+            const text = tempDiv.textContent || tempDiv.innerText || '';
+            
+            return text.length > maxLength 
+                ? text.substring(0, maxLength) + '...' 
+                : text;
         }
 
         function escapeHtml(text) {
@@ -234,24 +227,11 @@
             const now = new Date();
             const diff = now - date;
 
-            // 1분 미만
-            if (diff < 60000) {
-                return '방금 전';
-            }
-            // 1시간 미만
-            if (diff < 3600000) {
-                return `${Math.floor(diff / 60000)}분 전`;
-            }
-            // 1일 미만
-            if (diff < 86400000) {
-                return `${Math.floor(diff / 3600000)}시간 전`;
-            }
-            // 7일 미만
-            if (diff < 604800000) {
-                return `${Math.floor(diff / 86400000)}일 전`;
-            }
+            if (diff < 60000) return '방금 전';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}분 전`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}시간 전`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)}일 전`;
 
-            // 그 이상은 날짜 표시
             const year = date.getFullYear();
             const month = String(date.getMonth() + 1).padStart(2, '0');
             const day = String(date.getDate()).padStart(2, '0');

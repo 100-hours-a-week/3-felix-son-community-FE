@@ -1,5 +1,7 @@
 // js/layout.js - 공통 레이아웃 관리
 class Layout {
+  static dropdownInitialized = false; // ✅ 중복 초기화 방지
+
   // 공통 헤더 HTML 반환
   static getHeaderHTML() {
     return `
@@ -23,36 +25,41 @@ class Layout {
   // 공통 푸터 HTML 반환
   static getFooterHTML() {
     return `
-    <footer class="footer">
-      <div class="container">
-        <p>&copy; 2025 아무 말 대잔치. All rights reserved.</p>
-        <div class="footer-links">
-          <a href="http://localhost:8080/terms/service" target="_blank">이용약관</a>
-          <a href="http://localhost:8080/terms/privacy" target="_blank">개인정보처리방침</a>
+      <footer class="footer">
+        <div class="container">
+          <p>&copy; 2025 아무 말 대잔치. All rights reserved.</p>
+          <div class="footer-links">
+            <a href="http://localhost:8080/terms/service" target="_blank">이용약관</a>
+            <a href="http://localhost:8080/terms/privacy" target="_blank">개인정보처리방침</a>
+          </div>
         </div>
-      </div>
-    </footer>
-  `;
+      </footer>
+    `;
   }
 
   // 헤더 삽입
   static loadHeader() {
     const headerHTML = this.getHeaderHTML();
-    const headerElement = document.querySelector("header");
-
-    if (headerElement) {
-      headerElement.innerHTML = headerHTML;
-    } else {
-      document.body.insertAdjacentHTML("afterbegin", headerHTML);
+    
+    let headerElement = document.querySelector("header");
+    
+    if (!headerElement) {
+      headerElement = document.createElement("header");
+      document.body.insertBefore(headerElement, document.body.firstChild);
     }
-
-    this.setupDropdown();
+    
+    headerElement.innerHTML = headerHTML;
+    
+    // ✅ 드롭다운 이벤트 설정 (한 번만)
+    if (!this.dropdownInitialized) {
+      this.setupDropdown();
+      this.dropdownInitialized = true;
+    }
   }
 
   // 푸터 삽입
   static loadFooter() {
-    // 인증 페이지에서는 footer 숨김
-    const authPages = ["/login", "/register"];
+    const authPages = ["/login", "/register", "/signup"];
     const currentPath = window.location.pathname;
 
     if (authPages.includes(currentPath)) {
@@ -60,17 +67,21 @@ class Layout {
     }
 
     const footerHTML = this.getFooterHTML();
-    const footerElement = document.querySelector("footer");
-
-    if (footerElement) {
-      footerElement.innerHTML = footerHTML;
-    } else {
-      document.body.insertAdjacentHTML("beforeend", footerHTML);
+    
+    let footerElement = document.querySelector("footer");
+    
+    if (!footerElement) {
+      footerElement = document.createElement("footer");
+      document.body.appendChild(footerElement);
     }
+    
+    footerElement.innerHTML = footerHTML;
   }
 
   // 드롭다운 이벤트 설정
   static setupDropdown() {
+    console.log("드롭다운 이벤트 설정");
+    
     document.addEventListener("click", (e) => {
       const profileBtn = e.target.closest(".profile-btn");
       const dropdown = document.querySelector(".profile-dropdown");
@@ -78,9 +89,13 @@ class Layout {
       if (profileBtn && dropdown) {
         e.stopPropagation();
         dropdown.classList.toggle("show");
+        console.log("드롭다운 토글:", dropdown.classList.contains("show"));
       } else {
+        // 외부 클릭 시 드롭다운 닫기
         if (dropdown && dropdown.classList.contains("show")) {
-          dropdown.classList.remove("show");
+          if (!e.target.closest(".profile-dropdown")) {
+            dropdown.classList.remove("show");
+          }
         }
       }
     });
@@ -94,7 +109,7 @@ class Layout {
   }
 }
 
-// 페이지 로드 시 자동 실행
+// ✅ 페이지 로드 시 자동 실행
 document.addEventListener("DOMContentLoaded", () => {
   Layout.init();
 });

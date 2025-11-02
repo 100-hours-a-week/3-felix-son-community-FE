@@ -1,36 +1,67 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>홈 - 커뮤니티</title>
-    <link rel="stylesheet" href="/css/style.css">
-</head>
-<body>
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
+  </head>
+  <body>
     <!-- 헤더는 layout.js가 자동 삽입 -->
-    
+
     <main class="main-content">
-        <div class="container">
-            <section class="welcome-section">
-                <h2>커뮤니티에 오신 것을 환영합니다!</h2>
-                <p>자유롭게 소통하고 정보를 공유하세요.</p>
-                <div class="welcome-actions">
-                    <a href="/posts" class="btn btn-primary">게시글 보기</a>
-                    <a href="/login" class="btn btn-secondary">로그인</a>
-                </div>
-            </section>
-        </div>
+      <div class="container">
+        <section class="welcome-section">
+          <h2>커뮤니티에 오신 것을 환영합니다!</h2>
+          <p>자유롭게 소통하고 정보를 공유하세요.</p>
+          <div class="welcome-actions">
+            <a href="/posts" class="btn btn-primary">게시글 보기</a>
+            <a href="/login" class="btn btn-secondary" id="authButton">로그인</a>
+          </div>
+        </section>
+      </div>
     </main>
-    
+
     <!-- 푸터는 layout.js가 자동 삽입 -->
-    
+
     <script src="/js/api.js"></script>
     <script src="/js/auth.js"></script>
     <script src="/js/layout.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            authManager.updateUI();
-        });
+      document.addEventListener("DOMContentLoaded", async () => {
+        console.log("홈 페이지 초기화");
+
+        try {
+          // ✅ authManager 초기화 대기 (중요!)
+          await authManager.init();
+          
+    
+
+          // ✅ 버튼 상태 업데이트
+          updateAuthButton();
+
+        } catch (error) {
+          console.error("페이지 초기화 실패:", error);
+        }
+      });
+
+      function updateAuthButton() {
+        const authButton = document.getElementById('authButton');
+        
+        if (authManager.isLoggedIn()) {
+          // 로그인 상태면 '글쓰기' 버튼으로 변경
+          authButton.textContent = '글쓰기';
+          authButton.href = '/posts/write';
+          authButton.className = 'btn btn-primary';
+        } else {
+          // 비로그인 상태면 '로그인' 버튼
+          authButton.textContent = '로그인';
+          authButton.href = '/login';
+          authButton.className = 'btn btn-secondary';
+        }
+      }
     </script>
-</body>
+  </body>
 </html>

@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>비밀번호 수정 - 커뮤니티</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
 </head>
 <body>
     <main class="main-content">
@@ -66,11 +68,7 @@
         const form = document.getElementById('passwordForm');
         const submitBtn = document.getElementById('submitBtn');
 
-        // // 비밀번호 유효성 검사
-        // passwordInput.addEventListener('input', validatePassword);
 
-        // // 비밀번호 확인 입력 체크
-        // confirmInput.addEventListener('input', validateConfirmPassword);
 
         function showFieldError(input, errorElement, message) {
             input.classList.add('error');
@@ -78,57 +76,10 @@
             errorElement.classList.add('show');
         }
 
-        // function validatePassword() {
-        //     const password = passwordInput.value;
-        //     passwordError.classList.remove('show');
-        //     passwordInput.classList.remove('error');
-
-        //     if (password.length === 0) return true;
-
-        //     if (password.length < 8) {
-        //         showFieldError(passwordInput, passwordError, '비밀번호는 최소 8자 이상이어야 합니다.');
-        //         return false;
-        //     }
-
-        //     const hasLetter = /[a-zA-Z]/.test(password);
-        //     const hasNumber = /\d/.test(password);
-        //     const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-
-        //     if (!hasLetter || !hasNumber || !hasSpecial) {
-        //         showFieldError(passwordInput, passwordError, '영문, 숫자, 특수문자를 모두 포함해야 합니다.');
-        //         return false;
-        //     }
-
-        //     return true;
-        // }
-
-        // function validateConfirmPassword() {
-        //     const password = passwordInput.value;
-        //     const confirmPassword = confirmInput.value;
-            
-        //     confirmError.classList.remove('show');
-        //     confirmInput.classList.remove('error');
-
-        //     if (confirmPassword.length === 0) return true;
-
-        //     if (password !== confirmPassword) {
-        //         showFieldError(confirmInput, confirmError, '비밀번호가 일치하지 않습니다.');
-        //         return false;
-        //     }
-
-        //     return true;
-        // }
 
         // 폼 제출
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
-
-            // const isPasswordValid = validatePassword();
-            // const isConfirmValid = validateConfirmPassword();
-
-            // if (!isPasswordValid || !isConfirmValid) {
-            //     return;
-            // }
 
             const password = passwordInput.value;
             const confirmPassword = confirmInput.value;
@@ -142,12 +93,7 @@
             submitBtn.disabled = true;
             submitBtn.textContent = '수정 중...';
 
-            console.log('비밀번호 변경 시도:', {
-                hasPassword: !!password,
-                hasConfirmPassword: !!confirmPassword,
-                token: api.getToken() ? '토큰 있음' : '토큰 없음'
-            });
-
+          
             try {
                 await api.changePassword(password, confirmPassword);
                 
@@ -164,22 +110,6 @@
                 
                 // 에러 메시지 처리
                 let errorMessage = '비밀번호 변경에 실패했습니다.';
-                
-                // if (error.status === 403) {
-                //     errorMessage = '권한이 없습니다. 다시 로그인해주세요.';
-                //     setTimeout(() => {
-                //         authManager.logout();
-                //         window.location.href = '/login';
-                //     }, 2000);
-                // } else if (error.status === 401) {
-                //     errorMessage = '인증이 만료되었습니다. 다시 로그인해주세요.';
-                //     setTimeout(() => {
-                //         authManager.logout();
-                //         window.location.href = '/login';
-                //     }, 2000);
-                // } else if (error.message) {
-                //     errorMessage = error.message;
-                // }
                 
                 showError(errorMessage);
             } finally {
