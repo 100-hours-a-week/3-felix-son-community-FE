@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>글쓰기 - 커뮤니티</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
     <style>
       /* contenteditable 에디터 스타일 */
       .rich-editor {
@@ -218,6 +220,7 @@
       let pendingImageFiles = [];
       let imageCounter = 0;
       let blobUrls = new Set(); // ✅ Blob URL 추적
+      let allowNavigation = false; // ✅ 네비게이션 허용 플래그
 
       document.addEventListener("DOMContentLoaded", async () => {
         // ✅ UI 업데이트
@@ -226,6 +229,7 @@
         // ✅ 로그인 확인 개선
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다.");
+          allowNavigation = true; // 로그인 페이지로 이동 허용
           setTimeout(() => {
             window.location.href = "/login";
           }, 1500);
@@ -316,17 +320,41 @@
 
       async function loadPostForEdit(postId) {
         try {
+          console.log("게시글 로드 시도:", postId);
+
           const post = await postService.getPost(postId);
+          console.log("게시글 로드 성공:", post);
+
           originalPost = post;
 
-          const currentUser = userService.getCurrentUser();
+          // ✅ authManager 사용으로 변경
+          const currentUser = authManager.getCurrentUser();
+          console.log("현재 사용자:", currentUser);
+
+          if (!currentUser) {
+            showError("로그인이 필요합니다.");
+            allowNavigation = true;
+            setTimeout(() => {
+              window.location.href = "/login";
+            }, 1500);
+            return;
+          }
+
           const isAuthor =
-            currentUser &&
-            (currentUser.userId === post.user.userId ||
-              currentUser.nickname === post.user.nickname);
+            currentUser.userId === post.user.userId ||
+            currentUser.nickname === post.user.nickname;
+
+          console.log("작성자 확인:", {
+            isAuthor,
+            currentUserId: currentUser.userId,
+            postUserId: post.user.userId,
+            currentNickname: currentUser.nickname,
+            postNickname: post.user.nickname,
+          });
 
           if (!isAuthor) {
             showError("게시글 작성자만 수정할 수 있습니다.");
+            allowNavigation = true;
             setTimeout(() => {
               window.location.href = `/posts/${postId}`;
             }, 1500);
@@ -342,7 +370,9 @@
         } catch (error) {
           console.error("게시글 로드 실패:", error);
 
-          // ✅ 401 에러 처리
+          allowNavigation = true;
+
+          // ✅ 에러 처리
           if (error.status === 401) {
             showError("로그인이 필요합니다.");
             setTimeout(() => {
@@ -350,6 +380,11 @@
             }, 1500);
           } else if (error.status === 403) {
             showError("권한이 없습니다.");
+            setTimeout(() => {
+              window.location.href = "/posts";
+            }, 1500);
+          } else if (error.status === 404) {
+            showError("게시글을 찾을 수 없습니다.");
             setTimeout(() => {
               window.location.href = "/posts";
             }, 1500);
@@ -742,15 +777,25 @@
               // ✅ Blob URL 정리
               cleanupBlobUrls();
 
+              // ✅ 네비게이션 허용
+              allowNavigation = true;
+
               setTimeout(() => {
                 window.location.href = `/posts/${editPostId}`;
               }, 1000);
             } else {
-              const response = await postService.createPost(title, body, imageUrls);
+              const response = await postService.createPost(
+                title,
+                body,
+                imageUrls
+              );
               showSuccess("게시글이 작성되었습니다.");
 
               // ✅ Blob URL 정리
               cleanupBlobUrls();
+
+              // ✅ 네비게이션 허용
+              allowNavigation = true;
 
               setTimeout(() => {
                 window.location.href = "/posts";
@@ -794,14 +839,17 @@
         const content = getEditorContent();
 
         // ✅ 변경사항 확인
-        if (title || content) {
-          if (!confirm("작성 중인 내용이 있습니다. 정말 취소하시겠습니까?")) {
+        if ((title || content) && !allowNavigation) {
+          if (!confirm("작성 중인 내용이 있습니다. 정말 나가시겠습니까?")) {
             return;
           }
         }
 
         // ✅ Blob URL 정리
         cleanupBlobUrls();
+
+        // ✅ 네비게이션 허용
+        allowNavigation = true;
 
         if (editMode && editPostId) {
           window.location.href = `/posts/${editPostId}`;
@@ -810,8 +858,16 @@
         }
       }
 
-      // ✅ 페이지 언로드 시 Blob URL 정리
+      // ✅ 페이지 언로드 시 Blob URL 정리 및 경고
       window.addEventListener("beforeunload", (e) => {
+        // Blob URL 정리는 항상 수행
+        cleanupBlobUrls();
+
+        // 작성 완료 후에는 경고 표시 안 함
+        if (allowNavigation) {
+          return;
+        }
+
         const title = document.getElementById("postTitle").value.trim();
         const content = getEditorContent();
 
@@ -820,9 +876,6 @@
           e.preventDefault();
           e.returnValue = "";
         }
-
-        // Blob URL 정리
-        cleanupBlobUrls();
       });
 
       // ✅ 이미지 리사이즈 변수

@@ -4,31 +4,32 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>로그인</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
   </head>
   <body>
-    <!-- ✅ 헤더 추가 -->
     <header></header>
 
-    <main class="main-content page-login">
+    <main class="main-content">
       <div class="login-container">
-        <div class="login-card">
-          <h1>로그인</h1>
-          <form id="loginForm">
-            <div class="form-group">
-              <label for="email">이메일</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                required
-                autocomplete="email"
-                placeholder="이메일을 입력하세요"
-              />
-            </div>
+        <h2>로그인</h2>
+        <form id="loginForm" class="login-form">
+          <div class="form-group">
+            <label for="email">이메일</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              required
+              autocomplete="email"
+              placeholder="이메일을 입력하세요"
+            />
+          </div>
 
-            <div class="form-group">
-              <label for="password">비밀번호</label>
+          <div class="form-group">
+            <label for="password">비밀번호</label>
+            <div class="password-input-wrapper">
               <input
                 type="password"
                 id="password"
@@ -37,16 +38,70 @@
                 autocomplete="current-password"
                 placeholder="비밀번호를 입력하세요"
               />
+              <button
+                type="button"
+                class="password-toggle-btn"
+                onclick="togglePasswordVisibility('password')"
+                aria-label="비밀번호 보기/숨기기"
+              >
+                <svg
+                  class="eye-icon eye-off"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    d="M12.108 12.108C11.7494 12.4788 11.3226 12.7758 10.8513 12.9828C10.38 13.1898 9.87344 13.3027 9.35865 13.3154C8.84385 13.3281 8.33227 13.2402 7.85239 13.0569C7.3725 12.8735 6.93374 12.5984 6.55885 12.2472C6.18396 11.896 5.88041 11.4757 5.66486 11.0102C5.44931 10.5447 5.3261 10.0432 5.30082 9.53109C5.27555 9.01897 5.34871 8.50686 5.51614 8.02253C5.68357 7.5382 5.94187 7.08979 6.27585 6.70251M15.3075 15.3075C13.8947 16.4459 12.1457 17.0802 10.3333 17.1C4.66667 17.1 1 10 1 10C2.10551 8.06883 3.60013 6.37953 5.39167 5.02917L15.3075 15.3075ZM8.23333 3.53333C8.91882 3.34494 9.62462 3.2492 10.3333 3.25C16 3.25 19.6667 10.35 19.6667 10.35C19.0844 11.4463 18.3862 12.4783 17.5833 13.4292L8.23333 3.53333Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M1 1L19.6667 19.6667"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <svg
+                  class="eye-icon eye-on"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 20 20"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  style="display: none"
+                >
+                  <path
+                    d="M1 10C1 10 4.66667 3.25 10.3333 3.25C16 3.25 19.6667 10 19.6667 10C19.6667 10 16 16.75 10.3333 16.75C4.66667 16.75 1 10 1 10Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                  <path
+                    d="M10.3333 12.75C11.8061 12.75 13 11.5561 13 10.0833C13 8.61053 11.8061 7.41667 10.3333 7.41667C8.86053 7.41667 7.66667 8.61053 7.66667 10.0833C7.66667 11.5561 8.86053 12.75 10.3333 12.75Z"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+              </button>
             </div>
+          </div>
 
-            <button type="submit" class="btn btn-primary btn-block">
-              로그인
-            </button>
-          </form>
+          <button type="submit" class="btn btn-primary btn-block">
+            로그인
+          </button>
+        </form>
 
-          <p class="login-footer">
-            계정이 없으신가요? <a href="/signup">회원가입</a>
-          </p>
+        <div class="auth-switch">
+          계정이 없으신가요? <a href="/signup">회원가입</a>
         </div>
       </div>
     </main>
@@ -107,6 +162,28 @@
           }
         });
       });
+
+      // ✅ 비밀번호 표시/숨기기 토글
+      function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const button = input.parentElement.querySelector(
+          ".password-toggle-btn"
+        );
+        const eyeOff = button.querySelector(".eye-off");
+        const eyeOn = button.querySelector(".eye-on");
+
+        if (input.type === "password") {
+          // 비밀번호 보이기
+          input.type = "text";
+          eyeOff.style.display = "none";
+          eyeOn.style.display = "block";
+        } else {
+          // 비밀번호 숨기기
+          input.type = "password";
+          eyeOff.style.display = "block";
+          eyeOn.style.display = "none";
+        }
+      }
     </script>
   </body>
 </html>

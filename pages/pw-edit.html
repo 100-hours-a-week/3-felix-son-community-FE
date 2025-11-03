@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>비밀번호 수정 - 커뮤니티</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
   </head>
   <body>
     <main class="main-content">
@@ -15,32 +17,72 @@
           <form id="passwordForm" class="profile-edit-form">
             <div class="form-group">
               <label for="password">새 비밀번호</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                placeholder="새 비밀번호를 입력하세요"
-                required
-              />
-              <span class="helper-text"
-                >* 8자 이상, 영문, 숫자, 특수문자 포함</span
-              >
-              <span class="error-text" id="passwordError"></span>
+              <div class="password-input-wrapper">
+                <input
+                  type="password"
+                  id="password"
+                  name="password"
+                  placeholder="새 비밀번호를 입력하세요"
+                  required
+                />
+                <button
+                  type="button"
+                  class="password-toggle-btn"
+                  onclick="togglePasswordVisibility('password')"
+                  aria-label="비밀번호 보기/숨기기"
+                >
+                  <svg class="eye-icon eye-off" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12.108 12.108C11.7494 12.4788 11.3226 12.7758 10.8513 12.9828C10.38 13.1898 9.87344 13.3027 9.35865 13.3154C8.84385 13.3281 8.33227 13.2402 7.85239 13.0569C7.3725 12.8735 6.93374 12.5984 6.55885 12.2472C6.18396 11.896 5.88041 11.4757 5.66486 11.0102C5.44931 10.5447 5.3261 10.0432 5.30082 9.53109C5.27555 9.01897 5.34871 8.50686 5.51614 8.02253C5.68357 7.5382 5.94187 7.08979 6.27585 6.70251M15.3075 15.3075C13.8947 16.4459 12.1457 17.0802 10.3333 17.1C4.66667 17.1 1 10 1 10C2.10551 8.06883 3.60013 6.37953 5.39167 5.02917L15.3075 15.3075ZM8.23333 3.53333C8.91882 3.34494 9.62462 3.2492 10.3333 3.25C16 3.25 19.6667 10.35 19.6667 10.35C19.0844 11.4463 18.3862 12.4783 17.5833 13.4292L8.23333 3.53333Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M1 1L19.6667 19.6667" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <svg class="eye-icon eye-on" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: none;">
+                    <path d="M1 10C1 10 4.66667 3.25 10.3333 3.25C16 3.25 19.6667 10 19.6667 10C19.6667 10 16 16.75 10.3333 16.75C4.66667 16.75 1 10 1 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10.3333 12.75C11.8061 12.75 13 11.5561 13 10.0833C13 8.61053 11.8061 7.41667 10.3333 7.41667C8.86053 7.41667 7.66667 8.61053 7.66667 10.0833C7.66667 11.5561 8.86053 12.75 10.3333 12.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <!-- ✅ 메시지 컨테이너 -->
+              <div class="form-message">
+                <span class="helper-text"
+                  >* 8자 이상, 영문, 숫자, 특수문자 포함</span
+                >
+                <span class="error-text" id="passwordError"></span>
+              </div>
             </div>
 
             <div class="form-group">
               <label for="confirmPassword">비밀번호 확인</label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                placeholder="비밀번호를 한번 더 입력하세요"
-                required
-              />
-              <span class="helper-text"
-                >* 위와 동일한 비밀번호를 입력하세요</span
-              >
-              <span class="error-text" id="confirmError"></span>
+              <div class="password-input-wrapper">
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  placeholder="비밀번호를 한번 더 입력하세요"
+                  required
+                />
+                <button
+                  type="button"
+                  class="password-toggle-btn"
+                  onclick="togglePasswordVisibility('confirmPassword')"
+                  aria-label="비밀번호 보기/숨기기"
+                >
+                  <svg class="eye-icon eye-off" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12.108 12.108C11.7494 12.4788 11.3226 12.7758 10.8513 12.9828C10.38 13.1898 9.87344 13.3027 9.35865 13.3154C8.84385 13.3281 8.33227 13.2402 7.85239 13.0569C7.3725 12.8735 6.93374 12.5984 6.55885 12.2472C6.18396 11.896 5.88041 11.4757 5.66486 11.0102C5.44931 10.5447 5.3261 10.0432 5.30082 9.53109C5.27555 9.01897 5.34871 8.50686 5.51614 8.02253C5.68357 7.5382 5.94187 7.08979 6.27585 6.70251M15.3075 15.3075C13.8947 16.4459 12.1457 17.0802 10.3333 17.1C4.66667 17.1 1 10 1 10C2.10551 8.06883 3.60013 6.37953 5.39167 5.02917L15.3075 15.3075ZM8.23333 3.53333C8.91882 3.34494 9.62462 3.2492 10.3333 3.25C16 3.25 19.6667 10.35 19.6667 10.35C19.0844 11.4463 18.3862 12.4783 17.5833 13.4292L8.23333 3.53333Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M1 1L19.6667 19.6667" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <svg class="eye-icon eye-on" width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg" style="display: none;">
+                    <path d="M1 10C1 10 4.66667 3.25 10.3333 3.25C16 3.25 19.6667 10 19.6667 10C19.6667 10 16 16.75 10.3333 16.75C4.66667 16.75 1 10 1 10Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M10.3333 12.75C11.8061 12.75 13 11.5561 13 10.0833C13 8.61053 11.8061 7.41667 10.3333 7.41667C8.86053 7.41667 7.66667 8.61053 7.66667 10.0833C7.66667 11.5561 8.86053 12.75 10.3333 12.75Z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+              </div>
+              <!-- ✅ 메시지 컨테이너 -->
+              <div class="form-message">
+                <span class="helper-text"
+                  >* 위와 동일한 비밀번호를 입력하세요</span
+                >
+                <span class="error-text" id="confirmError"></span>
+              </div>
             </div>
 
             <div class="form-actions">
@@ -60,7 +102,6 @@
       </div>
     </main>
 
-    <!-- 순서 중요: 클래스 정의 → 초기화 -->
     <script src="/js/notificationService.js"></script>
     <script src="/js/apiService.js"></script>
     <script src="/js/postService.js"></script>
@@ -70,14 +111,11 @@
     <script src="/js/authUiManager.js"></script>
     <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
-    <!-- ✅ 마지막에 초기화 -->
     <script src="/js/initService.js"></script>
     <script>
       document.addEventListener("DOMContentLoaded", () => {
-        // ✅ UI 업데이트
         authManager.updateUI();
 
-        // ✅ 로그인 확인 개선
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다.");
           setTimeout(() => {
@@ -86,9 +124,26 @@
           return;
         }
 
-        // ✅ 유효성 검사 활성화
         setupValidation();
       });
+
+      // ✅ 비밀번호 표시/숨기기 토글
+      function togglePasswordVisibility(inputId) {
+        const input = document.getElementById(inputId);
+        const button = input.parentElement.querySelector('.password-toggle-btn');
+        const eyeOff = button.querySelector('.eye-off');
+        const eyeOn = button.querySelector('.eye-on');
+        
+        if (input.type === 'password') {
+          input.type = 'text';
+          eyeOff.style.display = 'none';
+          eyeOn.style.display = 'block';
+        } else {
+          input.type = 'password';
+          eyeOff.style.display = 'block';
+          eyeOn.style.display = 'none';
+        }
+      }
 
       const passwordInput = document.getElementById("password");
       const confirmInput = document.getElementById("confirmPassword");
@@ -97,12 +152,10 @@
       const form = document.getElementById("passwordForm");
       const submitBtn = document.getElementById("submitBtn");
 
-      // ✅ 유효성 검사 설정
       function setupValidation() {
         passwordInput.addEventListener("blur", validatePassword);
         confirmInput.addEventListener("blur", validateConfirmPassword);
 
-        // 실시간 피드백 (입력 중)
         passwordInput.addEventListener("input", () => {
           if (passwordInput.value.length > 0) {
             clearFieldError(passwordInput, passwordError);
@@ -116,21 +169,38 @@
         });
       }
 
-      // ✅ 필드 에러 표시
       function showFieldError(input, errorElement, message) {
         input.classList.add("error");
         errorElement.textContent = message;
         errorElement.classList.add("show");
+        
+        // ✅ helper-text 숨기기
+        const formMessage = errorElement.closest('.form-message');
+        if (formMessage) {
+          const helperText = formMessage.querySelector('.helper-text');
+          if (helperText) {
+            helperText.style.opacity = '0';
+            helperText.style.visibility = 'hidden';
+          }
+        }
       }
 
-      // ✅ 필드 에러 제거
       function clearFieldError(input, errorElement) {
         input.classList.remove("error");
         errorElement.textContent = "";
         errorElement.classList.remove("show");
+        
+        // ✅ helper-text 다시 표시
+        const formMessage = errorElement.closest('.form-message');
+        if (formMessage) {
+          const helperText = formMessage.querySelector('.helper-text');
+          if (helperText) {
+            helperText.style.opacity = '1';
+            helperText.style.visibility = 'visible';
+          }
+        }
       }
 
-      // ✅ 비밀번호 유효성 검사
       function validatePassword() {
         const password = passwordInput.value;
         clearFieldError(passwordInput, passwordError);
@@ -169,7 +239,6 @@
         return true;
       }
 
-      // ✅ 비밀번호 확인 유효성 검사
       function validateConfirmPassword() {
         const password = passwordInput.value;
         const confirmPassword = confirmInput.value;
@@ -197,11 +266,9 @@
         return true;
       }
 
-      // ✅ 폼 제출
       form.addEventListener("submit", async function (e) {
         e.preventDefault();
 
-        // 모든 유효성 검사 실행
         const isPasswordValid = validatePassword();
         const isConfirmValid = validateConfirmPassword();
 
@@ -213,7 +280,6 @@
         const password = passwordInput.value;
         const confirmPassword = confirmInput.value;
 
-        // ✅ 버튼 비활성화 (중복 제출 방지)
         submitBtn.disabled = true;
         submitBtn.textContent = "수정 중...";
 
@@ -229,26 +295,21 @@
           console.log("비밀번호 변경 성공");
           showSuccess("비밀번호가 성공적으로 변경되었습니다!");
 
-          // ✅ 폼 초기화
           form.reset();
           clearFieldError(passwordInput, passwordError);
           clearFieldError(confirmInput, confirmError);
 
-          // ✅ 페이지 이동
           setTimeout(() => {
             window.location.href = "/posts";
           }, 1500);
         } catch (error) {
           console.error("비밀번호 변경 실패:", error);
 
-          // ✅ 에러 메시지 처리
           let errorMessage = "비밀번호 변경에 실패했습니다.";
 
           if (error.status === 401) {
             errorMessage = "인증이 만료되었습니다.";
             showError(errorMessage);
-            // api.js에서 자동으로 토큰 갱신 시도
-            // 갱신 실패 시 로그아웃 처리는 api.js에서 수행
           } else if (error.status === 403) {
             errorMessage = "권한이 없습니다.";
             showError(errorMessage);
@@ -256,7 +317,6 @@
               authManager.logout();
             }, 2000);
           } else if (error.status === 400) {
-            // 백엔드 유효성 검사 실패
             errorMessage =
               error.message || "비밀번호 형식이 올바르지 않습니다.";
             showError(errorMessage);
@@ -267,13 +327,11 @@
             showError(errorMessage);
           }
         } finally {
-          // ✅ 버튼 다시 활성화
           submitBtn.disabled = false;
           submitBtn.textContent = "수정하기";
         }
       });
 
-      // ✅ 취소 버튼
       function goBack() {
         if (passwordInput.value || confirmInput.value) {
           if (!confirm("작성 중인 내용이 있습니다. 정말 취소하시겠습니까?")) {

@@ -4,7 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>회원정보 수정 - 커뮤니티</title>
-    <link rel="stylesheet" href="/css/style.css" />
+    <link rel="stylesheet" href="/css/base.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <link rel="stylesheet" href="/css/pages.css" />
   </head>
   <body>
     <main class="main-content">
@@ -85,13 +87,6 @@
               </button>
             </div>
           </form>
-
-          <!-- 비밀번호 변경 -->
-          <div class="additional-actions">
-            <a href="/pages/pw-edit.html" class="btn btn-outline">
-              비밀번호 변경
-            </a>
-          </div>
 
           <!-- 회원 탈퇴 -->
           <div class="account-delete-section">
@@ -374,7 +369,10 @@
             });
 
             // ✅ File 객체 전달
-            await userService.updateUserProfile(nickname, selectedProfileImageFile);
+            await userService.updateUserProfile(
+              nickname,
+              selectedProfileImageFile
+            );
 
             // ✅ 로컬 스토리지의 사용자 정보 업데이트
             const updatedUser = await userService.getUserProfile();

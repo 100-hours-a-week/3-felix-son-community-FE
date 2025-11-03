@@ -12,9 +12,6 @@ window.AuthManager = class {
     const token = this.getToken();
     console.log("저장된 토큰:", token ? `${token.substring(0, 20)}...` : "없음");
 
-    // ✅ init에서는 /users/me 호출하지 않음
-    // 토큰만 확인하고 필요할 때 지연 로딩
-
     console.log("로그인 상태:", this.isLoggedIn());
   }
 
