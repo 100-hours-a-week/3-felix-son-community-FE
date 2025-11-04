@@ -237,11 +237,11 @@
                           isAuthor
                             ? `
                             <div class="action-buttons-right">
+                               <button class="btn btn-primary" onclick="editPost('${post.postId}')">
+                                    수정
+                                </button>
                                 <button class="btn btn-danger" onclick="deletePost('${post.postId}')">
                                     삭제
-                                </button>
-                                <button class="btn btn-primary" onclick="editPost('${post.postId}')">
-                                    수정
                                 </button>
                             </div>
                         `

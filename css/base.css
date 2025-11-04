@@ -118,37 +118,51 @@ a.btn {
 }
 
 /* ============================================
-   메시지 (성공/에러/로딩)
+   알림 메시지 (헤더 중앙 고정)
    ============================================ */
-.error-message {
+#notification-container {
+    position: fixed;
+    top: 80px; /* 헤더 아래 */
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    pointer-events: none; /* 클릭 이벤트 통과 */
+    max-width: 90%;
+    width: 500px;
+}
+
+.notification-message {
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    color: white;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    pointer-events: auto; /* 메시지는 클릭 가능 */
+    text-align: center;
+}
+
+.notification-message.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification-message.error-message {
     background-color: #e74c3c;
-    color: white;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    animation: slideDown 0.3s ease;
 }
 
-.success-message {
+.notification-message.success-message {
     background-color: #2ecc71;
-    color: white;
-    padding: 1rem;
-    border-radius: 4px;
-    margin-bottom: 1rem;
-    animation: slideDown 0.3s ease;
 }
 
-@keyframes slideDown {
-    from {
-        opacity: 0;
-        transform: translateY(-20px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
+/* ============================================
+   로딩 스타일
+   ============================================ */
 .loading {
     text-align: center;
     padding: 2rem;
@@ -191,6 +205,21 @@ a.btn {
 .loading-indicator p {
     color: #666;
     font-size: 0.95rem;
+}
+
+/* ============================================
+   반응형 - 모바일
+   ============================================ */
+@media (max-width: 768px) {
+    #notification-container {
+        top: 60px; /* 모바일에서 헤더가 작을 경우 */
+        width: 95%;
+    }
+
+    .notification-message {
+        padding: 0.875rem 1.25rem;
+        font-size: 0.9rem;
+    }
 }
 
 /* ============================================

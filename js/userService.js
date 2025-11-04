@@ -1,6 +1,7 @@
 window.UserService = class {
-  constructor() {
+  constructor(apiService, fileUploadService) {
     this.apiService = window.apiService;
+    this.fileUploadService = window.fileUploadService;
   }
 
   getUserProfile() {
