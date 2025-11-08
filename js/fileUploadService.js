@@ -6,7 +6,7 @@ window.FileUploadService = class {
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const defaultUrl = isLocal 
       ? 'http://localhost:8080/api'
-      : `http://${window.location.hostname}:8080/api`;
+      : `/api`;
     
     this.baseUrl = this.apiService?.baseUrl || defaultUrl;
     console.log("FileUpload Base URL:", this.baseUrl);
