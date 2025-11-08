@@ -1,6 +1,8 @@
 window.ApiService = class {
-  constructor(baseUrl = "http://localhost:8080/api") {
-    this.baseUrl = baseUrl;
+  constructor(baseUrl) {
+    // 환경 변수 우선, 없으면 기본값 사용
+    this.baseUrl = baseUrl || import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+    console.log("API Base URL:", this.baseUrl); // 디버깅용
   }
 
   getToken() {
