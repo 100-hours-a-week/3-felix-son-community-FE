@@ -1,8 +1,13 @@
 window.ApiService = class {
   constructor(baseUrl) {
-    // 환경 변수 우선, 없으면 기본값 사용
-    this.baseUrl = baseUrl || import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
-    console.log("API Base URL:", this.baseUrl); // 디버깅용
+    // 환경별 자동 감지
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const defaultUrl = isLocal 
+      ? 'http://localhost:8080/api'
+      : `http://${window.location.hostname}:8080/api`; // EC2 IP 자동 사용
+    
+    this.baseUrl = baseUrl || defaultUrl;
+    console.log("API Base URL:", this.baseUrl);
   }
 
   getToken() {
@@ -57,7 +62,6 @@ window.ApiService = class {
     try {
       let response = await fetch(url, config);
 
-      // ✅ 401 처리 개선: authManager가 없으면 즉시 에러
       if (response.status === 401) {
         if (typeof authManager === "undefined") {
           throw { status: 401, message: "인증이 필요합니다." };
@@ -67,7 +71,6 @@ window.ApiService = class {
         const refreshed = await authManager.refreshAccessToken();
 
         if (refreshed) {
-          // 재시도
           const newToken = this.getToken();
           config.headers["Authorization"] = `Bearer ${newToken}`;
           response = await fetch(url, config);

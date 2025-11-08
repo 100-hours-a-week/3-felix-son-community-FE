@@ -1,8 +1,14 @@
 window.FileUploadService = class {
   constructor() {
     this.apiService = window.apiService;
-    // 환경 변수 우선, 없으면 apiService의 baseUrl 사용, 최종 기본값
-    this.baseUrl = import.meta.env.VITE_API_BASE_URL || this.apiService?.baseUrl || "http://localhost:8080/api";
+    
+    // 환경별 자동 감지
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    const defaultUrl = isLocal 
+      ? 'http://localhost:8080/api'
+      : `http://${window.location.hostname}:8080/api`;
+    
+    this.baseUrl = this.apiService?.baseUrl || defaultUrl;
     console.log("FileUpload Base URL:", this.baseUrl);
   }
 
