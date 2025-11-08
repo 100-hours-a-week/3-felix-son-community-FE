@@ -582,7 +582,7 @@
         try {
           console.log("이미지 업로드 시작:", file.name);
 
-          const response = await fetch("http://localhost:8080/api/images", {
+          const response = await fetch(`${apiService.baseUrl}/images`, {
             method: "POST",
             body: formData,
           });
