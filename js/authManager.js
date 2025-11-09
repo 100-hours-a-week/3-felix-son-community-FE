@@ -12,7 +12,6 @@ window.AuthManager = class {
     const token = this.getToken();
     console.log("저장된 토큰:", token ? `${token.substring(0, 20)}...` : "없음");
 
-
     console.log("로그인 상태:", this.isLoggedIn());
   }
 
@@ -39,7 +38,6 @@ window.AuthManager = class {
   }
 
   isLoggedIn() {
-    // ✅ 토큰만 있으면 로그인으로 간주
     return !!this.getToken();
   }
 
@@ -47,7 +45,6 @@ window.AuthManager = class {
     return this.currentUser;
   }
 
-  // ✅ 사용자 정보가 필요할 때만 호출
   async ensureUserInfo() {
     if (this.currentUser) {
       return this.currentUser;
@@ -69,51 +66,73 @@ window.AuthManager = class {
     }
   }
 
-  // authManager.js
-async login(email, password) {
-  try {
-    console.log("로그인 시도:", email);
-    const response = await this.apiService.post("/auth/login", { email, password }, false);
-    console.log("로그인 응답:", response);
-
-    if (response.accessToken) {
-      this.setToken(response.accessToken);
-      console.log("✅ 토큰 저장 완료:", response.accessToken.substring(0, 20) + "...");
-    } else {
-      throw new Error("로그인 응답에 토큰이 없습니다.");
-    }
-
-    const userInfo = {
-      userId: response.userId,
-      email: response.email,
-      nickname: response.nickname,
-      profileImageUrl: response.profileImageUrl,
-    };
-
-    this.setUser(userInfo);
-    console.log("사용자 정보 저장 완료:", userInfo);
-
-    this.updateUI();
-    showSuccess("로그인 성공!");
-    
-    // ✅ 여기서 리다이렉트하지 않음 (login.html에서 처리)
-    return true;
-  } catch (error) {
-    console.error("로그인 실패:", error);
-    showError(error.message || "로그인에 실패했습니다.");
-    return false;
-  }
-}
-
-  async signup(email, password, nickname, profileImageUrl) {
+  async login(email, password) {
     try {
-      await this.apiService.post("/auth/signup", { email, password, nickname, profileImageUrl }, false);
-      showSuccess("회원가입 성공! 로그인해주세요.");
+      console.log("로그인 시도:", email);
+      const response = await this.apiService.post("/auth/login", { email, password }, false);
+      console.log("로그인 응답:", response);
+
+      if (response.accessToken) {
+        this.setToken(response.accessToken);
+        console.log("✅ 토큰 저장 완료:", response.accessToken.substring(0, 20) + "...");
+      } else {
+        throw new Error("로그인 응답에 토큰이 없습니다.");
+      }
+
+      const userInfo = {
+        userId: response.userId,
+        email: response.email,
+        nickname: response.nickname,
+        profileImageUrl: response.profileImageUrl,
+      };
+
+      this.setUser(userInfo);
+      console.log("사용자 정보 저장 완료:", userInfo);
+
+      this.updateUI();
+      showSuccess("로그인 성공!");
+      
       return true;
     } catch (error) {
-      console.error("회원가입 실패:", error);
-      showError(error.message || "회원가입에 실패했습니다.");
+      console.error("로그인 실패:", error);
+      showError(error.message || "로그인에 실패했습니다.");
       return false;
+    }
+  }
+
+  // ✅ 수정: 회원가입 - 토큰 저장 및 상세 응답 반환
+  async signup(email, password, nickname, profileImageUrl) {
+    try {
+      console.log("회원가입 시도:", email);
+      
+      const response = await this.apiService.post(
+        "/auth/signup", 
+        { email, password, nickname, profileImageUrl }, 
+        false,
+        { credentials: 'include' }  // ✅ 쿠키 전송
+      );
+      
+      console.log("회원가입 응답:", response);
+
+      // ✅ AccessToken 저장
+      if (response.accessToken) {
+        this.setToken(response.accessToken);
+        console.log("✅ 회원가입 후 토큰 저장 완료");
+      }
+
+      // ✅ 성공 응답 반환
+      return {
+        success: true,
+        status: 201,
+        message: "회원가입이 완료되었습니다!",
+        data: response
+      };
+      
+    } catch (error) {
+      console.error("회원가입 실패:", error);
+      
+      // ✅ 에러를 그대로 throw (signup.html에서 처리)
+      throw error;
     }
   }
 
@@ -132,7 +151,6 @@ async login(email, password) {
   }
 
   async refreshUserInfo() {
-    // ✅ 이 메서드는 이제 ensureUserInfo()를 사용
     return this.ensureUserInfo();
   }
 
