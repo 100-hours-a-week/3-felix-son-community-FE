@@ -10,7 +10,10 @@ window.AuthManager = class {
     console.log("AuthManager 초기화 시작");
 
     const token = this.getToken();
-    console.log("저장된 토큰:", token ? `${token.substring(0, 20)}...` : "없음");
+    console.log(
+      "저장된 토큰:",
+      token ? `${token.substring(0, 20)}...` : "없음"
+    );
 
     console.log("로그인 상태:", this.isLoggedIn());
   }
@@ -69,12 +72,20 @@ window.AuthManager = class {
   async login(email, password) {
     try {
       console.log("로그인 시도:", email);
-      const response = await this.apiService.post("/auth/login", { email, password }, false);
+      const response = await this.apiService.post(
+        "/auth/login",
+        { email, password },
+        false,
+        { credentials: "include" }
+      );
       console.log("로그인 응답:", response);
 
       if (response.accessToken) {
         this.setToken(response.accessToken);
-        console.log("✅ 토큰 저장 완료:", response.accessToken.substring(0, 20) + "...");
+        console.log(
+          "✅ 토큰 저장 완료:",
+          response.accessToken.substring(0, 20) + "..."
+        );
       } else {
         throw new Error("로그인 응답에 토큰이 없습니다.");
       }
@@ -91,7 +102,7 @@ window.AuthManager = class {
 
       this.updateUI();
       showSuccess("로그인 성공!");
-      
+
       return true;
     } catch (error) {
       console.error("로그인 실패:", error);
@@ -104,14 +115,14 @@ window.AuthManager = class {
   async signup(email, password, nickname, profileImageUrl) {
     try {
       console.log("회원가입 시도:", email);
-      
+
       const response = await this.apiService.post(
-        "/auth/signup", 
-        { email, password, nickname, profileImageUrl }, 
+        "/auth/signup",
+        { email, password, nickname, profileImageUrl },
         false,
-        { credentials: 'include' }  // ✅ 쿠키 전송
+        { credentials: "include" } // ✅ 쿠키 전송
       );
-      
+
       console.log("회원가입 응답:", response);
 
       // ✅ AccessToken 저장
@@ -125,12 +136,11 @@ window.AuthManager = class {
         success: true,
         status: 201,
         message: "회원가입이 완료되었습니다!",
-        data: response
+        data: response,
       };
-      
     } catch (error) {
       console.error("회원가입 실패:", error);
-      
+
       // ✅ 에러를 그대로 throw (signup.html에서 처리)
       throw error;
     }
