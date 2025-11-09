@@ -4,7 +4,7 @@ window.ApiService = class {
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const defaultUrl = isLocal 
       ? 'http://localhost:8080/api'
-      : `api`; 
+      : `/api`; 
     
     this.baseUrl = baseUrl || defaultUrl;
     console.log("API Base URL:", this.baseUrl);
