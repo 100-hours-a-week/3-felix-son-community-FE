@@ -12,6 +12,7 @@ window.AuthManager = class {
     const token = this.getToken();
     console.log("저장된 토큰:", token ? `${token.substring(0, 20)}...` : "없음");
 
+
     console.log("로그인 상태:", this.isLoggedIn());
   }
 
