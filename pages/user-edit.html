@@ -122,7 +122,6 @@
       let hasImageChanged = false;
 
       document.addEventListener("DOMContentLoaded", async () => {
-        authManager.updateUI();
 
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다");

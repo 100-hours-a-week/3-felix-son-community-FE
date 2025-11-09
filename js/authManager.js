@@ -3,18 +3,14 @@ window.AuthManager = class {
     this.currentUser = null;
     this.apiService = window.apiService;
     this.authUiManager = new AuthUiManager(this);
+    this.userInfoPromise = null;
     this.init();
   }
 
   init() {
     console.log("AuthManager 초기화 시작");
-
     const token = this.getToken();
-    console.log(
-      "저장된 토큰:",
-      token ? `${token.substring(0, 20)}...` : "없음"
-    );
-
+    console.log("저장된 토큰:", token ? `${token.substring(0, 20)}...` : "없음");
     console.log("로그인 상태:", this.isLoggedIn());
   }
 
@@ -49,24 +45,48 @@ window.AuthManager = class {
   }
 
   async ensureUserInfo() {
-    if (this.currentUser) {
-      return this.currentUser;
-    }
-
+    // ✅ 토큰이 없으면 즉시 반환
     if (!this.getToken()) {
       console.warn("토큰이 없어서 사용자 정보를 가져올 수 없습니다.");
       return null;
     }
 
-    try {
-      console.log("사용자 정보 로딩 중...");
-      const user = await this.apiService.get("/users/me");
-      this.setUser(user);
-      return user;
-    } catch (error) {
-      console.error("사용자 정보 로드 실패:", error);
-      return null;
+    // 이미 로드된 경우
+    if (this.currentUser) {
+      return this.currentUser;
     }
+
+    // 이미 요청 중인 경우 (중복 요청 방지)
+    if (this.userInfoPromise) {
+      return this.userInfoPromise;
+    }
+
+    // 새로운 요청 시작
+    console.log("🔄 사용자 정보 로딩 중...");
+    this.userInfoPromise = this.apiService
+      .get("/users/me")
+      .then((user) => {
+        this.setUser(user);
+        console.log("✅ 사용자 정보 로드 성공:", user.nickname);
+        return user;
+      })
+      .catch((error) => {
+        console.error("❌ 사용자 정보 로드 실패:", error);
+        
+        // ✅ 토큰이 유효하지 않으면 제거
+        if (error.status === 401) {
+          console.log("토큰이 유효하지 않음 - 제거");
+          this.removeToken();
+          this.currentUser = null;
+        }
+        
+        return null;
+      })
+      .finally(() => {
+        this.userInfoPromise = null;
+      });
+
+    return this.userInfoPromise;
   }
 
   async login(email, password) {
@@ -82,10 +102,7 @@ window.AuthManager = class {
 
       if (response.accessToken) {
         this.setToken(response.accessToken);
-        console.log(
-          "✅ 토큰 저장 완료:",
-          response.accessToken.substring(0, 20) + "..."
-        );
+        console.log("✅ 토큰 저장 완료:", response.accessToken.substring(0, 20) + "...");
       } else {
         throw new Error("로그인 응답에 토큰이 없습니다.");
       }
@@ -96,13 +113,10 @@ window.AuthManager = class {
         nickname: response.nickname,
         profileImageUrl: response.profileImageUrl,
       };
-
       this.setUser(userInfo);
-      console.log("사용자 정보 저장 완료:", userInfo);
 
       this.updateUI();
       showSuccess("로그인 성공!");
-
       return true;
     } catch (error) {
       console.error("로그인 실패:", error);
@@ -111,7 +125,6 @@ window.AuthManager = class {
     }
   }
 
-  // ✅ 수정: 회원가입 - 토큰 저장 및 상세 응답 반환
   async signup(email, password, nickname, profileImageUrl) {
     try {
       console.log("회원가입 시도:", email);
@@ -120,28 +133,22 @@ window.AuthManager = class {
         "/auth/signup",
         { email, password, nickname, profileImageUrl },
         false,
-        { credentials: "include" } // ✅ 쿠키 전송
+        { credentials: "include" }
       );
 
       console.log("회원가입 응답:", response);
 
-      // ✅ AccessToken 저장
-      if (response.accessToken) {
-        this.setToken(response.accessToken);
-        console.log("✅ 회원가입 후 토큰 저장 완료");
-      }
+      // ✅ 토큰을 받았지만 저장하지 않음 (명시적 로그인 유도)
+      console.log("✅ 회원가입 성공 - 로그인 페이지로 이동합니다");
 
-      // ✅ 성공 응답 반환
       return {
         success: true,
         status: 201,
-        message: "회원가입이 완료되었습니다!",
+        message: "회원가입이 완료되었습니다! 로그인해주세요.",
         data: response,
       };
     } catch (error) {
       console.error("회원가입 실패:", error);
-
-      // ✅ 에러를 그대로 throw (signup.html에서 처리)
       throw error;
     }
   }
@@ -153,15 +160,17 @@ window.AuthManager = class {
       console.error("로그아웃 요청 실패:", error);
     }
 
-    this.removeToken();
-    this.currentUser = null;
-
+    this.clearAuthState();
     window.location.href = "/";
     showSuccess("로그아웃 되었습니다.");
   }
 
-  async refreshUserInfo() {
-    return this.ensureUserInfo();
+  // ✅ 인증 상태 초기화 메서드
+  clearAuthState() {
+    this.removeToken();
+    this.currentUser = null;
+    this.userInfoPromise = null;
+    console.log("✅ 인증 상태 초기화 완료");
   }
 
   async refreshAccessToken() {

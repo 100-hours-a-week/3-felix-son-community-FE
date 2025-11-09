@@ -275,7 +275,7 @@
       let blobUrl = null;
 
       document.addEventListener("DOMContentLoaded", () => {
-        authManager.updateUI();
+    
 
         if (authManager.isLoggedIn()) {
           window.location.href = "/";
@@ -674,6 +674,8 @@
 
             // ✅ 성공 처리
             showSuccess(result.message || "회원가입이 완료되었습니다!");
+
+            //authManager.clearAuthState();
 
             if (blobUrl) URL.revokeObjectURL(blobUrl);
 

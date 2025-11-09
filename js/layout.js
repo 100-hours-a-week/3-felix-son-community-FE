@@ -19,7 +19,6 @@ window.Layout = class {
     `;
   }
 
-  // 공통 푸터 HTML 반환
   static getFooterHTML() {
     return `
     <footer class="footer">
@@ -34,7 +33,6 @@ window.Layout = class {
   `;
   }
 
-  // 헤더 삽입
   static loadHeader() {
     const headerHTML = this.getHeaderHTML();
     const headerElement = document.querySelector("header");
@@ -48,9 +46,7 @@ window.Layout = class {
     this.setupDropdown();
   }
 
-  // 푸터 삽입
   static loadFooter() {
-    // 인증 페이지에서는 footer 숨김
     const authPages = ["/login", "/register"];
     const currentPath = window.location.pathname;
 
@@ -68,7 +64,6 @@ window.Layout = class {
     }
   }
 
-  // 드롭다운 이벤트 설정
   static setupDropdown() {
     document.addEventListener("click", (e) => {
       const profileBtn = e.target.closest(".profile-btn");
@@ -90,14 +85,11 @@ window.Layout = class {
     this.loadFooter();
     console.log("✅ 공통 레이아웃 로드 완료");
 
-    // ✅ authManager가 있으면 UI 업데이트
-    // 약간의 지연을 주어 DOM이 완전히 준비되도록
-    setTimeout(() => {
-      if (typeof authManager !== "undefined") {
-        authManager.updateUI();
-        console.log("✅ 인증 UI 업데이트 완료");
-      }
-    }, 0);
+    // ✅ authManager UI 업데이트 (한 번만!)
+    if (typeof authManager !== "undefined") {
+      authManager.updateUI();
+      console.log("✅ 인증 UI 업데이트 완료");
+    }
   }
 };
 

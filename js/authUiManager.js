@@ -1,25 +1,39 @@
-// authUiManager.js
 window.AuthUiManager = class {
   constructor(authManager) {
     this.authManager = authManager;
   }
 
-  updateUI() {
+  async updateUI() {
     const authNav = document.getElementById("authNav");
     if (!authNav) return;
 
-    if (this.authManager.isLoggedIn()) {
-      const user = this.authManager.getCurrentUser();
-      
-      if (user) {
-        this.renderUserProfile(user);
-      } else {
-        this.renderLoadingProfile();
-        this.loadAndRenderUserProfile();
-      }
-    } else {
-      authNav.innerHTML = `<a href="/login" class="btn btn-primary btn-login">로그인</a>`;
+    // ✅ 핵심: 토큰이 없으면 즉시 로그인 버튼 렌더링
+    if (!this.authManager.isLoggedIn()) {
+      this.renderLoginButton();
+      return;
     }
+
+    // ✅ 토큰이 있을 때만 사용자 정보 로드 시도
+    const user = this.authManager.getCurrentUser();
+    
+    if (user) {
+      this.renderUserProfile(user);
+    } else {
+      this.renderLoadingProfile();
+      const loadedUser = await this.authManager.ensureUserInfo();
+      if (loadedUser) {
+        this.renderUserProfile(loadedUser);
+      } else {
+        // 사용자 정보 로드 실패 시 로그인 버튼 표시
+        this.renderLoginButton();
+      }
+    }
+  }
+
+  renderLoginButton() {
+    const authNav = document.getElementById("authNav");
+    if (!authNav) return;
+    authNav.innerHTML = `<a href="/login" class="btn btn-primary btn-login">로그인</a>`;
   }
 
   renderLoadingProfile() {
@@ -35,23 +49,16 @@ window.AuthUiManager = class {
     `;
   }
 
-  async loadAndRenderUserProfile() {
-    try {
-      const user = await this.authManager.ensureUserInfo();
-      if (user) {
-        this.renderUserProfile(user);
-      } else {
-        const authNav = document.getElementById("authNav");
-        if (authNav) {
-          authNav.innerHTML = `<a href="/login" class="btn btn-primary btn-login">로그인</a>`;
-        }
-      }
-    } catch (error) {
-      console.error("사용자 정보 로드 실패:", error);
-      const authNav = document.getElementById("authNav");
-      if (authNav) {
-        authNav.innerHTML = `<a href="/login" class="btn btn-primary btn-login">로그인</a>`;
-      }
+  createProfileImageHTML(user, size = 'small') {
+    const nickname = user.nickname;
+    const hasProfileImage = user.profileImageUrl && user.profileImageUrl.trim() !== "";
+    
+    if (hasProfileImage) {
+      const className = size === 'small' ? 'profile-image' : 'dropdown-profile-image';
+      return `<img src="${user.profileImageUrl}" alt="${nickname}" class="${className}">`;
+    } else {
+      const className = size === 'small' ? 'profile-image-default' : 'dropdown-profile-default';
+      return `<div class="${className}">👤</div>`;
     }
   }
 
@@ -60,25 +67,16 @@ window.AuthUiManager = class {
     if (!authNav) return;
 
     const nickname = user.nickname;
-    const hasProfileImage = user.profileImageUrl && user.profileImageUrl.trim() !== "";
 
     authNav.innerHTML = `
       <div class="profile-container">
         <button class="profile-btn" id="profileButton">
-          ${
-            hasProfileImage
-              ? `<img src="${user.profileImageUrl}" alt="${nickname}" class="profile-image">`
-              : `<div class="profile-image-default">👤</div>`
-          }
+          ${this.createProfileImageHTML(user, 'small')}
         </button>
         <div class="profile-dropdown" id="profileDropdown">
           <div class="dropdown-header">
             <div class="dropdown-user-info">
-              ${
-                hasProfileImage
-                  ? `<img src="${user.profileImageUrl}" alt="${nickname}" class="dropdown-profile-image">`
-                  : `<div class="dropdown-profile-default">👤</div>`
-              }
+              ${this.createProfileImageHTML(user, 'large')}
               <div class="dropdown-user-name">${nickname}</div>
             </div>
           </div>
@@ -92,7 +90,6 @@ window.AuthUiManager = class {
       </div>
     `;
 
-    // ✅ 렌더링 후 즉시 이벤트 바인딩
     this.bindDropdownEvents();
   }
 
@@ -107,7 +104,6 @@ window.AuthUiManager = class {
 
     console.log("✅ 드롭다운 이벤트 바인딩");
 
-    // ✅ 프로필 버튼 클릭
     profileBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -115,7 +111,6 @@ window.AuthUiManager = class {
       dropdown.classList.toggle("show");
     });
 
-    // ✅ 문서 전체 클릭 시 드롭다운 닫기
     document.addEventListener("click", (e) => {
       if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
         if (dropdown.classList.contains("show")) {

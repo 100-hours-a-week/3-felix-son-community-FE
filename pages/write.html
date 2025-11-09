@@ -223,9 +223,7 @@
       let allowNavigation = false; // ✅ 네비게이션 허용 플래그
 
       document.addEventListener("DOMContentLoaded", async () => {
-        // ✅ UI 업데이트
-        authManager.updateUI();
-
+      
         // ✅ 로그인 확인 개선
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다.");

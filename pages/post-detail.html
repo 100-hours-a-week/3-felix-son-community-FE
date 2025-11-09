@@ -94,8 +94,6 @@
       let currentCommentsData = []; // ✅ 댓글 데이터 캐싱
 
       document.addEventListener("DOMContentLoaded", async () => {
-        // ✅ 모든 초기화 로직을 이곳으로 통합합니다.
-        authManager.updateUI(); // 1. 로그인 상태 UI 갱신
 
         const pathParts = window.location.pathname.split("/");
         const postId = pathParts[pathParts.length - 1];
