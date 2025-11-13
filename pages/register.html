@@ -275,8 +275,6 @@
       let blobUrl = null;
 
       document.addEventListener("DOMContentLoaded", () => {
-    
-
         if (authManager.isLoggedIn()) {
           window.location.href = "/";
           return;
@@ -576,35 +574,20 @@
       }
 
       async function uploadProfileImage(file) {
-        const formData = new FormData();
-        formData.append("images", file);
-
         try {
-          console.log("이미지 업로드 시작:", file.name);
+          console.log("프로필 이미지 업로드 시작:", file.name);
 
-          const response = await fetch(`${apiService.baseUrl}/images`, {
-            method: "POST",
-            body: formData,
-          });
+          // FileUploadService 사용
+          const result = await window.fileUploadService.uploadImages([file]);
 
-          if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            console.error("이미지 업로드 실패:", errorData);
-            throw new Error(
-              errorData.message || "이미지 업로드에 실패했습니다"
-            );
-          }
-
-          const data = await response.json();
-
-          if (data.urls && data.urls.length > 0) {
-            console.log("이미지 업로드 성공:", data.urls[0]);
-            return data.urls[0];
+          if (result.urls && result.urls.length > 0) {
+            console.log("프로필 이미지 업로드 성공:", result.urls[0]);
+            return result.urls[0];
           }
 
           throw new Error("업로드된 이미지 URL을 받지 못했습니다");
         } catch (error) {
-          console.error("이미지 업로드 오류:", error);
+          console.error("프로필 이미지 업로드 오류:", error);
           throw error;
         }
       }
