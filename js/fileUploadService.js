@@ -2,7 +2,7 @@ window.FileUploadService = class {
   constructor() {
     this.apiService = window.apiService;
     
-    // API Gateway 엔드포인트 (나중에 실제 URL로 교체)
+    // API Gateway 엔드포인트
     this.apiGatewayUrl = "https://j9cutt34d2.execute-api.ap-northeast-2.amazonaws.com/presign";
     
     console.log("FileUpload - API Gateway URL:", this.apiGatewayUrl);
@@ -51,7 +51,8 @@ window.FileUploadService = class {
     const response = await fetch(this.apiGatewayUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
         fileName: file.name,
@@ -102,10 +103,6 @@ window.FileUploadService = class {
     files.forEach(f => formData.append("images", f));
 
     try {
-      // ApiService의 request 메서드 활용
-      // - 자동 401 처리 ✅
-      // - 자동 토큰 갱신 ✅
-      // - 중복 코드 제거 ✅
       const data = await this.apiService.request('/images', {
         method: 'POST',
         body: formData,
