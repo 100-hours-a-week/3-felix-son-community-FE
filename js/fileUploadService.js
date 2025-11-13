@@ -3,7 +3,7 @@ window.FileUploadService = class {
     this.apiService = window.apiService;
     
     // API Gateway 엔드포인트 (나중에 실제 URL로 교체)
-    this.apiGatewayUrl = process.env.API_GATEWAY_URL;
+    this.apiGatewayUrl = "https://j9cutt34d2.execute-api.ap-northeast-2.amazonaws.com/presign";
     
     console.log("FileUpload - API Gateway URL:", this.apiGatewayUrl);
   }
