@@ -1,43 +1,45 @@
 window.FileUploadService = class {
   constructor() {
     this.apiService = window.apiService;
-    
-    const isLocal = window.location.hostname === 'localhost' || 
-                    window.location.hostname === '127.0.0.1';
-    const defaultUrl = isLocal 
-      ? 'http://localhost:8080/api'
-      : `/api`;
-    
-    this.baseUrl = this.apiService?.baseUrl || defaultUrl;
-    
-    // ✅ API Gateway URL (실제 URL로 변경하세요)
-    this.apiGatewayUrl = 'https://j9cutt34d2.execute-api.ap-northeast-2.amazonaws.com/presign';
-    
-    console.log("FileUpload Base URL:", this.baseUrl);
-    console.log("API Gateway URL:", this.apiGatewayUrl);
+
+    // API Gateway 엔드포인트
+    this.apiGatewayUrl =
+      "https://j9cutt34d2.execute-api.ap-northeast-2.amazonaws.com/presign";
+
+    console.log("FileUpload - API Gateway URL:", this.apiGatewayUrl);
   }
 
-  // ✅ Presigned URL 요청 (JWT 토큰 포함)
-  async getPresignedUrl(file) {
+  window.FileUploadService = class {
+  constructor() {
+    this.apiService = window.apiService;
+    this.apiGatewayUrl = "https://j9cutt34d2.execute-api.ap-northeast-2.amazonaws.com/presign";
+    console.log("FileUpload - API Gateway URL:", this.apiGatewayUrl);
+  }
+
+  /**
+   * Presigned URL 받기 (조건부 인증)
+   */
+  async getPresignedUrl(file, requireAuth = true) {
     console.log('🔑 Presigned URL 요청 중...');
     
-    // ✅ 토큰 가져오기
-    const token = this.apiService.getToken();
+    const headers = {
+      'Content-Type': 'application/json'
+    };
     
-    if (!token) {
-      console.error('❌ 토큰 없음 - 로그인 필요');
-      throw new Error('로그인이 필요합니다.');
+    // ✅ requireAuth가 true일 때만 토큰 추가
+    if (requireAuth) {
+      const token = sessionStorage.getItem("token");
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+        console.log('🔐 인증 토큰 포함');
+      }
+    } else {
+      console.log('🔓 인증 없이 요청 (회원가입 등)');
     }
     
-    console.log('✅ 토큰 확인:', token.substring(0, 20) + '...');
-    
-    // ✅ Authorization 헤더에 토큰 포함
     const response = await fetch(this.apiGatewayUrl, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`  // ✅ JWT 토큰!
-      },
+      headers: headers,
       body: JSON.stringify({
         fileName: file.name,
         contentType: file.type
@@ -49,26 +51,45 @@ window.FileUploadService = class {
       try {
         errorData = await response.json();
       } catch (e) {
-        console.error('에러 응답 파싱 실패:', e);
+        console.error('에러 파싱 실패:', e);
       }
-      
-      console.error('❌ Presigned URL 요청 실패:', response.status, errorData);
-      
-      // ✅ 401 에러 처리
-      if (response.status === 401) {
-        throw new Error(errorData.error || '로그인이 필요합니다. 다시 로그인해주세요.');
-      }
-      
       throw new Error(errorData.error || errorData.message || 'Presigned URL 생성 실패');
     }
 
-    const data = await response.json();
-    console.log('✅ Presigned URL 받음');
-    
-    return data;
+    return await response.json();
   }
 
-  // S3 직접 업로드
+  /**
+   * 이미지 업로드 (조건부 인증)
+   */
+  async uploadImages(files, requireAuth = true) {
+    const uploadResults = [];
+
+    for (const file of files) {
+      try {
+        console.log('📤 업로드 시작:', file.name, file.size, 'bytes');
+        
+        // ✅ requireAuth 전달
+        const presignData = await this.getPresignedUrl(file, requireAuth);
+        console.log('✅ Presigned URL 받음');
+
+        await this.uploadToS3(presignData.uploadUrl, file);
+        console.log('✅ S3 업로드 완료');
+
+        uploadResults.push(presignData.imageUrls.large);
+        
+        console.log('🎉 업로드 완료:', presignData.fileName);
+
+      } catch (error) {
+        console.error('❌ 업로드 에러:', error);
+        alert(`이미지 업로드 실패: ${error.message || '알 수 없는 오류'}`);
+        throw error;
+      }
+    }
+
+    return { urls: uploadResults };
+  }
+
   async uploadToS3(presignedUrl, file) {
     console.log('☁️ S3 업로드 중...');
     
@@ -81,46 +102,34 @@ window.FileUploadService = class {
     });
 
     if (!response.ok) {
-      console.error('❌ S3 업로드 실패:', response.status);
-      throw new Error('S3 업로드 실패');
+      throw new Error(`S3 업로드 실패: ${response.status} ${response.statusText}`);
     }
 
-    console.log('✅ S3 업로드 완료');
+    return response;
   }
+};
 
-  // 메인 업로드 함수
-  async uploadImages(files) {
-    if (!files || files.length === 0) {
-      throw new Error('업로드할 파일이 없습니다.');
+  /**
+   * 기존 방식 (Backend 직접 업로드 - 로컬 개발용)
+   * ApiService 활용 ✅
+   */
+  async uploadImagesLegacy(files) {
+    const formData = new FormData();
+    files.forEach((f) => formData.append("images", f));
+
+    try {
+      const data = await this.apiService.request("/images", {
+        method: "POST",
+        body: formData,
+        contentType: null, // FormData는 contentType 자동 설정
+        auth: true,
+      });
+
+      console.log("이미지 업로드 성공:", data);
+      return data;
+    } catch (error) {
+      console.error("이미지 업로드 실패:", error);
+      throw error;
     }
-
-    console.log('📤 업로드 시작:', files.length, '개 파일');
-
-    const uploadResults = [];
-
-    for (const file of files) {
-      try {
-        // 1. Presigned URL 요청 (JWT 인증 포함)
-        const presignData = await this.getPresignedUrl(file);
-        
-        // 2. S3에 직접 업로드
-        await this.uploadToS3(presignData.uploadUrl, file);
-        
-        // 3. 처리된 이미지 URL 저장
-        uploadResults.push(presignData.imageUrls.large);
-        
-        console.log(`✅ ${file.name} 업로드 완료`);
-        
-      } catch (error) {
-        console.error(`❌ ${file.name} 업로드 실패:`, error);
-        throw error;
-      }
-    }
-
-    console.log('🎉 모든 파일 업로드 완료');
-    
-    return {
-      urls: uploadResults
-    };
   }
 };
