@@ -1,17 +1,6 @@
 window.FileUploadService = class {
   constructor() {
     this.apiService = window.apiService;
-
-    // API Gateway 엔드포인트
-    this.apiGatewayUrl =
-      "https://j9cutt34d2.execute-api.ap-northeast-2.amazonaws.com/presign";
-
-    console.log("FileUpload - API Gateway URL:", this.apiGatewayUrl);
-  }
-
-  window.FileUploadService = class {
-  constructor() {
-    this.apiService = window.apiService;
     this.apiGatewayUrl = "https://j9cutt34d2.execute-api.ap-northeast-2.amazonaws.com/presign";
     console.log("FileUpload - API Gateway URL:", this.apiGatewayUrl);
   }
@@ -106,30 +95,5 @@ window.FileUploadService = class {
     }
 
     return response;
-  }
-};
-
-  /**
-   * 기존 방식 (Backend 직접 업로드 - 로컬 개발용)
-   * ApiService 활용 ✅
-   */
-  async uploadImagesLegacy(files) {
-    const formData = new FormData();
-    files.forEach((f) => formData.append("images", f));
-
-    try {
-      const data = await this.apiService.request("/images", {
-        method: "POST",
-        body: formData,
-        contentType: null, // FormData는 contentType 자동 설정
-        auth: true,
-      });
-
-      console.log("이미지 업로드 성공:", data);
-      return data;
-    } catch (error) {
-      console.error("이미지 업로드 실패:", error);
-      throw error;
-    }
   }
 };
