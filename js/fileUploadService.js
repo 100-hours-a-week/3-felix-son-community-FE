@@ -5,8 +5,12 @@ window.FileUploadService = class {
     console.log("FileUpload - API Gateway URL:", this.apiGatewayUrl);
   }
 
+  getToken() {
+    return sessionStorage.getItem("token");
+  }
+
   /**
-   * Presigned URL 받기 (조건부 인증)
+   * Presigned URL 받기
    */
   async getPresignedUrl(file, requireAuth = true) {
     console.log('🔑 Presigned URL 요청 중...');
@@ -15,15 +19,14 @@ window.FileUploadService = class {
       'Content-Type': 'application/json'
     };
     
-    // ✅ requireAuth가 true일 때만 토큰 추가
     if (requireAuth) {
-      const token = sessionStorage.getItem("token");
+      const token = this.getToken();
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
         console.log('🔐 인증 토큰 포함');
       }
     } else {
-      console.log('🔓 인증 없이 요청 (회원가입 등)');
+      console.log('🔓 인증 없이 요청 (회원가입)');
     }
     
     const response = await fetch(this.apiGatewayUrl, {
@@ -49,7 +52,7 @@ window.FileUploadService = class {
   }
 
   /**
-   * 이미지 업로드 (조건부 인증)
+   * 이미지 업로드
    */
   async uploadImages(files, requireAuth = true) {
     const uploadResults = [];
@@ -58,15 +61,25 @@ window.FileUploadService = class {
       try {
         console.log('📤 업로드 시작:', file.name, file.size, 'bytes');
         
-        // ✅ requireAuth 전달
         const presignData = await this.getPresignedUrl(file, requireAuth);
-        console.log('✅ Presigned URL 받음');
+        console.log('✅ Presigned Data:', presignData);
 
         await this.uploadToS3(presignData.uploadUrl, file);
         console.log('✅ S3 업로드 완료');
 
-        uploadResults.push(presignData.imageUrls.large);
+        // ✅ 인증 여부에 따라 다른 필드 사용
+        let imageUrl;
+        if (presignData.isAuthenticated) {
+          // 인증 사용자: imageUrls.large
+          imageUrl = presignData.imageUrls.large;
+          console.log('🔐 인증 사용자 - large URL 사용:', imageUrl);
+        } else {
+          // 미인증 사용자: imageUrl (단일)
+          imageUrl = presignData.imageUrl;
+          console.log('🔓 미인증 사용자 - 원본 URL 사용:', imageUrl);
+        }
         
+        uploadResults.push(imageUrl);
         console.log('🎉 업로드 완료:', presignData.fileName);
 
       } catch (error) {
@@ -79,6 +92,9 @@ window.FileUploadService = class {
     return { urls: uploadResults };
   }
 
+  /**
+   * S3 직접 업로드
+   */
   async uploadToS3(presignedUrl, file) {
     console.log('☁️ S3 업로드 중...');
     
