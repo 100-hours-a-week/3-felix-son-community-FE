@@ -7,13 +7,11 @@ window.AuthUiManager = class {
     const authNav = document.getElementById("authNav");
     if (!authNav) return;
 
-    // ✅ 핵심: 토큰이 없으면 즉시 로그인 버튼 렌더링
     if (!this.authManager.isLoggedIn()) {
       this.renderLoginButton();
       return;
     }
 
-    // ✅ 토큰이 있을 때만 사용자 정보 로드 시도
     const user = this.authManager.getCurrentUser();
     
     if (user) {
@@ -24,7 +22,6 @@ window.AuthUiManager = class {
       if (loadedUser) {
         this.renderUserProfile(loadedUser);
       } else {
-        // 사용자 정보 로드 실패 시 로그인 버튼 표시
         this.renderLoginButton();
       }
     }
@@ -101,8 +98,6 @@ window.AuthUiManager = class {
       console.warn("프로필 버튼 또는 드롭다운을 찾을 수 없습니다.");
       return;
     }
-
-    console.log("✅ 드롭다운 이벤트 바인딩");
 
     profileBtn.addEventListener("click", (e) => {
       e.preventDefault();

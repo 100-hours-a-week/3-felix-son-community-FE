@@ -106,10 +106,8 @@
       </div>
     </main>
 
-    <!-- ✅ 푸터 추가 (layout.js가 내용 채움) -->
     <footer></footer>
 
-    <!-- ✅ 스크립트 로드 순서 중요! -->
     <script src="/js/notificationService.js"></script>
     <script src="/js/apiService.js"></script>
     <script src="/js/postService.js"></script>
@@ -119,7 +117,6 @@
     <script src="/js/authUiManager.js"></script>
     <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
-    <!-- ✅ layout.js 추가! -->
     <script src="/js/initService.js"></script>
 
     <script>
@@ -163,7 +160,6 @@
         });
       });
 
-      // ✅ 비밀번호 표시/숨기기 토글
       function togglePasswordVisibility(inputId) {
         const input = document.getElementById(inputId);
         const button = input.parentElement.querySelector(
@@ -173,12 +169,10 @@
         const eyeOn = button.querySelector(".eye-on");
 
         if (input.type === "password") {
-          // 비밀번호 보이기
           input.type = "text";
           eyeOff.style.display = "none";
           eyeOn.style.display = "block";
         } else {
-          // 비밀번호 숨기기
           input.type = "password";
           eyeOff.style.display = "block";
           eyeOn.style.display = "none";

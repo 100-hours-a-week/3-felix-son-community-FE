@@ -1,6 +1,5 @@
 window.ApiService = class {
   constructor(baseUrl) {
-    // 환경별 자동 감지
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const defaultUrl = isLocal 
       ? 'http://localhost:8080/api'

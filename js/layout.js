@@ -1,11 +1,10 @@
-// js/layout.js - 공통 레이아웃 관리
 window.Layout = class {
   static getHeaderHTML() {
     return `
       <nav class="navbar">
         <div class="container">
           <div class="nav-brand">
-            <h1><a href="/">아무 말 대잔치</a></h1>
+            <h1><a href="/">Just For Share</a></h1>
           </div>
           <ul class="nav-menu">
             <li><a href="/">홈</a></li>
@@ -23,7 +22,7 @@ window.Layout = class {
     return `
     <footer class="footer">
       <div class="container">
-        <p>&copy; 2025 아무 말 대잔치. All rights reserved.</p>
+        <p>&copy; 2025 Just For Share. All rights reserved.</p>
         <div class="footer-links">
           <a href="http://localhost:8080/terms/service" target="_blank">이용약관</a>
           <a href="http://localhost:8080/terms/privacy" target="_blank">개인정보처리방침</a>
@@ -84,8 +83,6 @@ window.Layout = class {
     this.loadHeader();
     this.loadFooter();
     console.log("✅ 공통 레이아웃 로드 완료");
-
-    // ✅ authManager UI 업데이트 (한 번만!)
     if (typeof authManager !== "undefined") {
       authManager.updateUI();
       console.log("✅ 인증 UI 업데이트 완료");
@@ -93,7 +90,6 @@ window.Layout = class {
   }
 };
 
-// 페이지 로드 시 자동 실행
 document.addEventListener("DOMContentLoaded", () => {
   Layout.init();
 });

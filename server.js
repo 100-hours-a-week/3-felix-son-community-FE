@@ -1,67 +1,52 @@
-// server.js
 const express = require('express');
 const path = require('path');
 
 const app = express();
 const PORT = 3000;
 
-// 정적 파일 서빙 (CSS, JS, 이미지 등)
 app.use(express.static(__dirname));
 
-// ============= 라우트 설정 =============
-
-// 홈
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// 로그인
 app.get('/login', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'login.html'));
 });
 
-// 회원가입
 app.get('/signup', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'register.html'));
 });
 
-// 게시글 목록
 app.get('/posts', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'post-list.html'));
 });
 
-// 글쓰기
 app.get('/posts/write', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'write.html'));
 });
 
-// 게시글 상세
 app.get('/posts/:id', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'post-detail.html'));
 });
 
-// 회원정보(프로필 사진, 닉네임)
 app.get('/users/me', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'user-edit.html'));
 });
 
-// 비밀번호 수정
 app.get('/users/me/password', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'pw-edit.html'));
 });
 
-// 이용약관
 app.get('/terms/service', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'terms-of-service.html'));
 });
 
-// 개인정보처리방침
 app.get('/terms/privacy', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'privacy-policy.html'));
 });
 
 
-// 404 에러 처리
 app.use((req, res) => {
     res.status(404).send(`
         <!DOCTYPE html>
@@ -82,7 +67,6 @@ app.use((req, res) => {
     `);
 });
 
-// 서버 시작
 app.listen(PORT, () => {
     console.log('========================================');
     console.log('프론트엔드 서버 실행 중');

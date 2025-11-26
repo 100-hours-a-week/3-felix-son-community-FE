@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="/css/components.css" />
     <link rel="stylesheet" href="/css/pages.css" />
     <style>
-      /* 게시글 본문 이미지 스타일 */
       .post-detail-content img {
         max-width: 100%;
         height: auto;
@@ -18,7 +17,6 @@
         display: block;
       }
 
-      /* ✅ image-wrapper 스타일 추가 (크기 보존용) */
       .post-detail-content .image-wrapper {
         position: relative;
         display: inline-block;
@@ -39,16 +37,13 @@
     </style>
   </head>
   <body>
-    <!-- 메인 콘텐츠 영역 -->
     <main class="main-content">
       <div class="container">
         <div id="postDetail">
           <div class="loading">게시글을 불러오는 중...</div>
         </div>
 
-        <!-- 댓글 섹션 -->
         <div id="commentSection" style="display: none">
-          <!-- 댓글 작성 폼 -->
           <div class="comment-write-section">
             <h3>댓글 작성</h3>
             <div class="comment-form">
@@ -63,18 +58,15 @@
             </div>
           </div>
 
-          <!-- 댓글 목록 -->
           <div class="comments-list">
             <h3>댓글 <span id="commentCount">0</span>개</h3>
             <div id="commentsList">
-              <!-- 댓글이 동적으로 로드됩니다 -->
             </div>
           </div>
         </div>
       </div>
     </main>
 
-    <!-- 순서 중요: 클래스 정의 → 초기화 -->
     <script src="/js/notificationService.js"></script>
     <script src="/js/apiService.js"></script>
     <script src="/js/postService.js"></script>
@@ -84,14 +76,13 @@
     <script src="/js/authUiManager.js"></script>
     <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
-    <!-- ✅ 마지막에 초기화 -->
     <script src="/js/initService.js"></script>
 
     <script>
       let currentPost = null;
       let commentsVisible = false;
       let editingCommentId = null;
-      let currentCommentsData = []; // ✅ 댓글 데이터 캐싱
+      let currentCommentsData = []; 
 
       document.addEventListener("DOMContentLoaded", async () => {
 
@@ -111,7 +102,6 @@
         } catch (error) {
           console.error("게시글 로드 실패:", error);
 
-          // ✅ 401 에러 처리 (토큰 만료 등)
           if (error.status === 401) {
             showError("로그인이 필요하거나 세션이 만료되었습니다.");
             setTimeout(() => {
@@ -126,21 +116,16 @@
         }
       });
 
-      // ✅ 마크다운/HTML을 렌더링 (크기 정보 보존)
       function renderMarkdownToHtml(content) {
         if (!content) return "";
 
-        // 이미 HTML 형식이면 그대로 반환 (크기 정보 보존)
         if (content.includes("<img") || content.includes("<div")) {
-          // image-wrapper가 있으면 그대로 사용
           if (content.includes("image-wrapper")) {
             return content;
           }
-          // 일반 img 태그만 있으면 그대로 반환
           return content;
         }
 
-        // 순수 마크다운이면 변환 (구 버전 호환)
         let html = content.replace(
           /!\[(.*?)\]\((.*?)\)/g,
           (match, alt, url) => {
@@ -150,7 +135,6 @@
           }
         );
 
-        // 줄바꿈을 <br>로 변환
         html = html.replace(/\n/g, "<br>");
 
         return html;
@@ -175,7 +159,6 @@
           (currentUser.userId === user.userId ||
             currentUser.nickname === nickname);
 
-        // body를 마크다운 렌더링
         const renderedBody = renderMarkdownToHtml(post.body || "");
 
         postDetail.innerHTML = `
@@ -256,7 +239,6 @@
             `;
       }
 
-      // 댓글 토글
       async function toggleComments() {
         const commentSection = document.getElementById("commentSection");
         commentsVisible = !commentsVisible;
@@ -269,7 +251,6 @@
         }
       }
 
-      // 댓글 목록 로드
       async function loadComments() {
         if (!currentPost) return;
 
@@ -277,7 +258,6 @@
           const response = await commentService.getComments(currentPost.postId);
           const comments = response.content || [];
 
-          // ✅ 댓글 데이터 캐싱
           currentCommentsData = comments;
 
           renderComments(comments);
@@ -289,10 +269,8 @@
         } catch (error) {
           console.error("댓글 로드 실패:", error);
 
-          // ✅ 401 에러 처리
           if (error.status === 401) {
             showError("로그인이 필요합니다.");
-            // 토큰 갱신은 api.js에서 자동 처리됨
           } else {
             showError("댓글을 불러오는데 실패했습니다.");
           }
@@ -391,14 +369,11 @@
           .join("");
       }
 
-      // ✅ 댓글 수정 시작
       function startEditComment(commentId, commentBody) {
         editingCommentId = commentId;
-        // ✅ 캐시된 데이터 사용
         renderComments(currentCommentsData);
       }
 
-      // ✅ 댓글 수정 완료
       async function saveEditComment(commentId) {
         const textarea = document.getElementById(
           `editCommentInput-${commentId}`
@@ -417,13 +392,11 @@
           editingCommentId = null;
           await loadComments();
 
-          // 게시글 정보도 다시 로드
           const updatedPost = await postService.getPost(currentPost.postId);
           currentPost = updatedPost;
         } catch (error) {
           console.error("댓글 수정 실패:", error);
 
-          // ✅ 401 에러 처리
           if (error.status === 401) {
             showError("로그인이 필요합니다.");
           } else {
@@ -432,16 +405,12 @@
         }
       }
 
-      // ✅ 댓글 수정 취소
       function cancelEditComment() {
         editingCommentId = null;
-        // ✅ 캐시된 데이터 사용
         renderComments(currentCommentsData);
       }
 
-      // 댓글 작성
       async function writeComment() {
-        // ✅ 로그인 체크 개선
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다.");
           setTimeout(() => {
@@ -470,7 +439,6 @@
         } catch (error) {
           console.error("댓글 작성 실패:", error);
 
-          // ✅ 401 에러 처리
           if (error.status === 401) {
             showError("로그인이 필요합니다.");
             setTimeout(() => {
@@ -482,7 +450,6 @@
         }
       }
 
-      // 댓글 삭제
       async function deleteComment(commentId) {
         if (!confirm("댓글을 삭제하시겠습니까?")) return;
 
@@ -497,7 +464,6 @@
         } catch (error) {
           console.error("댓글 삭제 실패:", error);
 
-          // ✅ 401 에러 처리
           if (error.status === 401) {
             showError("로그인이 필요합니다.");
           } else {
@@ -507,7 +473,6 @@
       }
 
       async function toggleLike() {
-        // ✅ 로그인 체크 개선
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다.");
           setTimeout(() => {
@@ -546,7 +511,6 @@
         } catch (error) {
           console.error("좋아요 실패:", error);
 
-          // ✅ 401 에러 처리
           if (error.status === 401) {
             showError("로그인이 필요합니다.");
           } else {
@@ -558,7 +522,6 @@
       }
 
       async function editPost(id) {
-        // ✅ 로그인 체크 개선
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다.");
           setTimeout(() => {
@@ -570,7 +533,6 @@
       }
 
       async function deletePost(id) {
-        // ✅ 로그인 체크 개선
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다.");
           setTimeout(() => {
@@ -590,7 +552,6 @@
         } catch (error) {
           console.error("게시글 삭제 실패:", error);
 
-          // ✅ 401 에러 처리
           if (error.status === 401) {
             showError("로그인이 필요합니다.");
           } else {

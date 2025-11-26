@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="/css/components.css" />
     <link rel="stylesheet" href="/css/pages.css" />
     <style>
-      /* contenteditable 에디터 스타일 */
       .rich-editor {
         min-height: 400px;
         max-height: 600px;
@@ -28,14 +27,12 @@
         box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.1);
       }
 
-      /* placeholder 스타일 */
       .rich-editor:empty:before {
         content: attr(data-placeholder);
         color: #999;
         cursor: text;
       }
 
-      /* 이미지 컨테이너 */
       .image-wrapper {
         position: relative;
         display: inline-block;
@@ -44,7 +41,6 @@
         min-width: 100px;
       }
 
-      /* 에디터 내부 이미지 스타일 */
       .rich-editor img {
         max-width: 100%;
         height: auto;
@@ -58,7 +54,6 @@
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
       }
 
-      /* 이미지 선택 시 */
       .image-wrapper.selected {
         outline: 3px solid #2196f3;
         outline-offset: 2px;
@@ -68,7 +63,6 @@
         box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.2);
       }
 
-      /* 삭제 버튼 */
       .image-delete-btn {
         position: absolute;
         top: 8px;
@@ -99,7 +93,6 @@
         transform: scale(1.1);
       }
 
-      /* 리사이즈 영역 (오른쪽 하단 모서리) */
       .image-wrapper::after {
         content: "";
         position: absolute;
@@ -111,7 +104,6 @@
         z-index: 5;
       }
 
-      /* 리사이징 중 */
       .image-wrapper.resizing {
         outline: 3px dashed #2196f3;
       }
@@ -121,7 +113,6 @@
         user-select: none;
       }
 
-      /* 에디터 툴바 */
       .editor-toolbar {
         margin-top: 10px;
         display: flex;
@@ -201,7 +192,6 @@
         </div>
       </div>
     </main>
-    <!-- 순서 중요: 클래스 정의 → 초기화 -->
     <script src="/js/notificationService.js"></script>
     <script src="/js/apiService.js"></script>
     <script src="/js/postService.js"></script>
@@ -211,7 +201,6 @@
     <script src="/js/authUiManager.js"></script>
     <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
-    <!-- ✅ 마지막에 초기화 -->
     <script src="/js/initService.js"></script>
     <script>
       let editMode = false;
@@ -219,15 +208,14 @@
       let originalPost = null;
       let pendingImageFiles = [];
       let imageCounter = 0;
-      let blobUrls = new Set(); // ✅ Blob URL 추적
-      let allowNavigation = false; // ✅ 네비게이션 허용 플래그
+      let blobUrls = new Set();
+      let allowNavigation = false;
 
       document.addEventListener("DOMContentLoaded", async () => {
       
-        // ✅ 로그인 확인 개선
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다.");
-          allowNavigation = true; // 로그인 페이지로 이동 허용
+          allowNavigation = true;
           setTimeout(() => {
             window.location.href = "/login";
           }, 1500);
@@ -249,7 +237,6 @@
         setupValidation();
       });
 
-      // ✅ 유효성 검사 설정
       function setupValidation() {
         const titleInput = document.getElementById("postTitle");
 
@@ -259,7 +246,6 @@
         );
       }
 
-      // ✅ 필드 에러 표시
       function showFieldError(input, errorId, message) {
         input.classList.add("error");
         const errorElement = document.getElementById(errorId);
@@ -269,7 +255,6 @@
         }
       }
 
-      // ✅ 필드 에러 제거
       function clearFieldError(input, errorId) {
         input.classList.remove("error");
         const errorElement = document.getElementById(errorId);
@@ -279,7 +264,6 @@
         }
       }
 
-      // ✅ 제목 유효성 검사
       function validateTitle() {
         const titleInput = document.getElementById("postTitle");
         const title = titleInput.value.trim();
@@ -303,7 +287,6 @@
         return true;
       }
 
-      // ✅ 내용 유효성 검사
       function validateContent() {
         const editor = document.getElementById("postContent");
         const content = getEditorContent();
@@ -325,7 +308,6 @@
 
           originalPost = post;
 
-          // ✅ authManager 사용으로 변경
           const currentUser = authManager.getCurrentUser();
           console.log("현재 사용자:", currentUser);
 
@@ -370,7 +352,6 @@
 
           allowNavigation = true;
 
-          // ✅ 에러 처리
           if (error.status === 401) {
             showError("로그인이 필요합니다.");
             setTimeout(() => {
@@ -565,7 +546,6 @@
           const tempId = `TEMP_IMAGE_${imageCounter++}`;
           pendingImageFiles.push({ id: tempId, file: file });
 
-          // ✅ Blob URL 생성 및 추적
           const tempUrl = URL.createObjectURL(file);
           blobUrls.add(tempUrl);
 
@@ -608,7 +588,6 @@
         const tempId = img.dataset.tempId;
         const blobUrl = img.src;
 
-        // ✅ Blob URL 해제
         if (blobUrl && blobUrl.startsWith("blob:")) {
           URL.revokeObjectURL(blobUrl);
           blobUrls.delete(blobUrl);
@@ -739,7 +718,6 @@
         writeForm.addEventListener("submit", async (e) => {
           e.preventDefault();
 
-          // ✅ 유효성 검사
           if (!validateTitle() || !validateContent()) {
             return;
           }
@@ -772,10 +750,8 @@
               await postService.updatePost(editPostId, title, body, imageUrls);
               showSuccess("게시글이 수정되었습니다.");
 
-              // ✅ Blob URL 정리
               cleanupBlobUrls();
 
-              // ✅ 네비게이션 허용
               allowNavigation = true;
 
               setTimeout(() => {
@@ -789,10 +765,8 @@
               );
               showSuccess("게시글이 작성되었습니다.");
 
-              // ✅ Blob URL 정리
               cleanupBlobUrls();
 
-              // ✅ 네비게이션 허용
               allowNavigation = true;
 
               setTimeout(() => {
@@ -802,7 +776,6 @@
           } catch (error) {
             console.error("게시글 처리 실패:", error);
 
-            // ✅ 에러 처리
             let errorMessage = "게시글 처리에 실패했습니다.";
 
             if (error.status === 401) {
@@ -823,7 +796,6 @@
         });
       }
 
-      // ✅ Blob URL 정리
       function cleanupBlobUrls() {
         blobUrls.forEach((url) => {
           URL.revokeObjectURL(url);
@@ -836,17 +808,14 @@
         const title = document.getElementById("postTitle").value.trim();
         const content = getEditorContent();
 
-        // ✅ 변경사항 확인
         if ((title || content) && !allowNavigation) {
           if (!confirm("작성 중인 내용이 있습니다. 정말 나가시겠습니까?")) {
             return;
           }
         }
 
-        // ✅ Blob URL 정리
         cleanupBlobUrls();
 
-        // ✅ 네비게이션 허용
         allowNavigation = true;
 
         if (editMode && editPostId) {
@@ -856,12 +825,9 @@
         }
       }
 
-      // ✅ 페이지 언로드 시 Blob URL 정리 및 경고
       window.addEventListener("beforeunload", (e) => {
-        // Blob URL 정리는 항상 수행
         cleanupBlobUrls();
 
-        // 작성 완료 후에는 경고 표시 안 함
         if (allowNavigation) {
           return;
         }
@@ -869,14 +835,12 @@
         const title = document.getElementById("postTitle").value.trim();
         const content = getEditorContent();
 
-        // 변경사항이 있으면 확인
         if (title || content) {
           e.preventDefault();
           e.returnValue = "";
         }
       });
 
-      // ✅ 이미지 리사이즈 변수
       let resizingWrapper = null;
       let resizeStartX = 0;
       let resizeStartWidth = 0;

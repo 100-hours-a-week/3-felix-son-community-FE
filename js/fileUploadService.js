@@ -9,9 +9,6 @@ window.FileUploadService = class {
     return sessionStorage.getItem("token");
   }
 
-  /**
-   * Presigned URL 받기
-   */
   async getPresignedUrl(file, requireAuth = true) {
     console.log('🔑 Presigned URL 요청 중...');
     
@@ -51,9 +48,6 @@ window.FileUploadService = class {
     return await response.json();
   }
 
-  /**
-   * 이미지 업로드
-   */
   async uploadImages(files, requireAuth = true) {
     const uploadResults = [];
 
@@ -67,14 +61,11 @@ window.FileUploadService = class {
         await this.uploadToS3(presignData.uploadUrl, file);
         console.log('✅ S3 업로드 완료');
 
-        // ✅ 인증 여부에 따라 다른 필드 사용
         let imageUrl;
         if (presignData.isAuthenticated) {
-          // 인증 사용자: imageUrls.large
           imageUrl = presignData.imageUrls.large;
           console.log('🔐 인증 사용자 - large URL 사용:', imageUrl);
         } else {
-          // 미인증 사용자: imageUrl (단일)
           imageUrl = presignData.imageUrl;
           console.log('🔓 미인증 사용자 - 원본 URL 사용:', imageUrl);
         }
@@ -92,9 +83,6 @@ window.FileUploadService = class {
     return { urls: uploadResults };
   }
 
-  /**
-   * S3 직접 업로드
-   */
   async uploadToS3(presignedUrl, file) {
     console.log('☁️ S3 업로드 중...');
     

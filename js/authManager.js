@@ -45,23 +45,19 @@ window.AuthManager = class {
   }
 
   async ensureUserInfo() {
-    // ✅ 토큰이 없으면 즉시 반환
     if (!this.getToken()) {
       console.warn("토큰이 없어서 사용자 정보를 가져올 수 없습니다.");
       return null;
     }
 
-    // 이미 로드된 경우
     if (this.currentUser) {
       return this.currentUser;
     }
 
-    // 이미 요청 중인 경우 (중복 요청 방지)
     if (this.userInfoPromise) {
       return this.userInfoPromise;
     }
 
-    // 새로운 요청 시작
     console.log("🔄 사용자 정보 로딩 중...");
     this.userInfoPromise = this.apiService
       .get("/users/me")
@@ -72,8 +68,7 @@ window.AuthManager = class {
       })
       .catch((error) => {
         console.error("❌ 사용자 정보 로드 실패:", error);
-        
-        // ✅ 토큰이 유효하지 않으면 제거
+    
         if (error.status === 401) {
           console.log("토큰이 유효하지 않음 - 제거");
           this.removeToken();
@@ -138,7 +133,6 @@ window.AuthManager = class {
 
       console.log("회원가입 응답:", response);
 
-      // ✅ 토큰을 받았지만 저장하지 않음 (명시적 로그인 유도)
       console.log("✅ 회원가입 성공 - 로그인 페이지로 이동합니다");
 
       return {
@@ -165,7 +159,6 @@ window.AuthManager = class {
     showSuccess("로그아웃 되었습니다.");
   }
 
-  // ✅ 인증 상태 초기화 메서드
   clearAuthState() {
     this.removeToken();
     this.currentUser = null;

@@ -9,7 +9,6 @@
     <link rel="stylesheet" href="/css/pages.css" />
   </head>
   <body>
-    <!-- 메인 콘텐츠 영역 -->
     <main class="main-content">
       <div class="container">
         <div class="section-header">
@@ -18,16 +17,10 @@
             글쓰기
           </a>
         </div>
-
-        <!-- 전체 게시글 수 정보 -->
         <div id="pageInfo" class="page-info"></div>
-
-        <!-- 게시글 목록 -->
         <div id="postList" class="post-list">
-          <!-- 게시글이 동적으로 로드됩니다 -->
         </div>
 
-        <!-- 로딩 인디케이터 -->
         <div
           id="loadingIndicator"
           class="loading-indicator"
@@ -37,14 +30,12 @@
           <p>게시글을 불러오는 중...</p>
         </div>
 
-        <!-- 마지막 페이지 메시지 -->
         <div id="endMessage" class="end-message" style="display: none">
           <p>모든 게시글을 불러왔습니다 ✓</p>
         </div>
       </div>
     </main>
 
-    <!-- 순서 중요: 클래스 정의 → 초기화 -->
     <script src="/js/notificationService.js"></script>
     <script src="/js/apiService.js"></script>
     <script src="/js/postService.js"></script>
@@ -54,10 +45,8 @@
     <script src="/js/authUiManager.js"></script>
     <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
-    <!-- ✅ 마지막에 초기화 -->
     <script src="/js/initService.js"></script>
     <script>
-      // 전역 변수
       let currentPage = 0;
       let isLoading = false;
       let isLastPage = false;
@@ -65,22 +54,17 @@
 
       document.addEventListener("DOMContentLoaded", async () => {
        
-        // ✅ 글쓰기 버튼 표시 여부 설정
         updateWriteButton();
 
-        // 초기 게시글 로드
         await loadPosts();
 
-        // 스크롤 이벤트 리스너 등록
         window.addEventListener("scroll", handleScroll);
       });
 
-      // ✅ 글쓰기 버튼 표시 함수
       function updateWriteButton() {
         const writeBtn = document.getElementById("writePostBtn");
         if (authManager.isLoggedIn()) {
           writeBtn.style.display = "inline-block";
-          // ✅ 클릭 이벤트 추가 (로그인 체크)
           writeBtn.onclick = (e) => {
             if (!authManager.isLoggedIn()) {
               e.preventDefault();
@@ -95,12 +79,9 @@
         }
       }
 
-      // 스크롤 이벤트 핸들러
       function handleScroll() {
-        // 이미 로딩 중이거나 마지막 페이지면 중단
         if (isLoading || isLastPage) return;
 
-        // 페이지 하단 근처 도달 확인 (하단 100px 이내)
         const scrollPosition = window.innerHeight + window.scrollY;
         const pageHeight = document.documentElement.scrollHeight;
 
@@ -109,9 +90,7 @@
         }
       }
 
-      // ✅ 게시글 로드 함수 (에러 처리 개선)
       async function loadPosts() {
-        // 중복 요청 방지
         if (isLoading || isLastPage) return;
 
         try {
@@ -120,7 +99,6 @@
 
           const response = await postService.getPosts(currentPage, 10);
 
-          // 첫 로드 시 전체 게시글 수 표시
           if (currentPage === 0) {
             totalElements = response.totalElements;
             displayPageInfo(response);
@@ -128,7 +106,6 @@
 
           const posts = response.content;
 
-          // 게시글이 없는 경우 (첫 페이지)
           if (currentPage === 0 && posts.length === 0) {
             const postList = document.getElementById("postList");
             postList.innerHTML =
@@ -138,26 +115,20 @@
             return;
           }
 
-          // 게시글 렌더링 (기존 목록에 추가)
           appendPosts(posts);
 
-          // 마지막 페이지 체크
           if (response.last) {
             isLastPage = true;
             showEndMessage();
           } else {
-            currentPage++; // 다음 페이지 준비
+            currentPage++;
           }
         } catch (error) {
           console.error("게시글 로드 실패:", error);
 
-          // ✅ 401 에러 처리
           if (error.status === 401) {
             console.log("토큰 만료 - 갱신 시도 중...");
-            // api.js에서 자동으로 토큰 갱신 처리됨
-            // 갱신 실패 시 로그인 페이지로 리다이렉트는 api.js에서 처리
           } else if (currentPage === 0) {
-            // 첫 페이지 로드 실패 시에만 에러 메시지 표시
             const postList = document.getElementById("postList");
             postList.innerHTML = `
                         <div class="error-message">
@@ -168,7 +139,6 @@
                         </div>
                     `;
           } else {
-            // 추가 페이지 로드 실패 시 조용히 처리
             showError("게시글을 더 불러오는데 실패했습니다.");
           }
         } finally {
@@ -177,20 +147,17 @@
         }
       }
 
-      // ✅ 재시도 함수
       async function retryLoadPosts() {
         currentPage = 0;
         isLastPage = false;
         await loadPosts();
       }
 
-      // 게시글을 목록에 추가
       function appendPosts(posts) {
         const postList = document.getElementById("postList");
 
         const postsHTML = posts
           .map((post) => {
-            // 안전하게 user 데이터 접근
             const user = post.user || {};
             const nickname = user.nickname || "익명";
             const profileImageUrl = user.profileImageUrl;
@@ -236,7 +203,6 @@
           })
           .join("");
 
-        // 첫 페이지면 교체, 아니면 추가
         if (currentPage === 0) {
           postList.innerHTML = postsHTML;
         } else {
@@ -244,12 +210,10 @@
         }
       }
 
-      // ✅ 게시글 이동 함수 (별도 함수로 분리)
       function goToPost(postId) {
         window.location.href = `/posts/${postId}`;
       }
 
-      // 전체 게시글 수 표시
       function displayPageInfo(response) {
         const pageInfo = document.getElementById("pageInfo");
         pageInfo.innerHTML = `
@@ -257,31 +221,26 @@
             `;
       }
 
-      // 로딩 인디케이터 표시
       function showLoadingIndicator() {
         const indicator = document.getElementById("loadingIndicator");
         indicator.style.display = "block";
       }
 
-      // 로딩 인디케이터 숨김
       function hideLoadingIndicator() {
         const indicator = document.getElementById("loadingIndicator");
         indicator.style.display = "none";
       }
 
-      // 마지막 페이지 메시지 표시
       function showEndMessage() {
         const endMessage = document.getElementById("endMessage");
         endMessage.style.display = "block";
       }
 
-      // 유틸리티 함수들
       function getPreview(content, maxLength = 150) {
         if (!content) return "";
 
-        // ✅ HTML 태그 제거 (마크다운 형식 처리)
-        let text = content.replace(/<[^>]*>/g, ""); // HTML 태그 제거
-        text = text.replace(/!\[.*?\]\(.*?\)/g, ""); // 마크다운 이미지 제거
+        let text = content.replace(/<[^>]*>/g, "");
+        text = text.replace(/!\[.*?\]\(.*?\)/g, "");
         text = text.trim();
 
         return text.length > maxLength
@@ -303,24 +262,19 @@
         const now = new Date();
         const diff = now - date;
 
-        // 1분 미만
         if (diff < 60000) {
           return "방금 전";
         }
-        // 1시간 미만
         if (diff < 3600000) {
           return `${Math.floor(diff / 60000)}분 전`;
         }
-        // 1일 미만
         if (diff < 86400000) {
           return `${Math.floor(diff / 3600000)}시간 전`;
         }
-        // 7일 미만
         if (diff < 604800000) {
           return `${Math.floor(diff / 86400000)}일 전`;
         }
 
-        // 그 이상은 날짜 표시
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");

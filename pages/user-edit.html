@@ -15,7 +15,6 @@
           <h2>회원정보 수정</h2>
 
           <form id="profileEditForm" class="profile-edit-form">
-            <!-- 프로필 사진 -->
             <div class="profile-edit-image">
               <div
                 class="profile-edit-preview"
@@ -31,7 +30,6 @@
                   <span>👤</span>
                 </div>
                 <button type="button" class="profile-change-btn">변경</button>
-                <!-- ✅ X 삭제 버튼 -->
                 <button
                   type="button"
                   class="profile-remove-btn"
@@ -52,14 +50,12 @@
               />
             </div>
 
-            <!-- 이메일 (읽기 전용) -->
             <div class="form-group">
               <label for="userEmail">이메일</label>
               <input type="email" id="userEmail" readonly disabled />
               <span class="helper-text">* 이메일은 변경할 수 없습니다</span>
             </div>
 
-            <!-- 닉네임 -->
             <div class="form-group">
               <label for="userNickname"
                 >닉네임 <span class="required">*</span></label
@@ -76,7 +72,6 @@
               </div>
             </div>
 
-            <!-- 버튼 그룹 -->
             <div class="form-actions">
               <button
                 type="button"
@@ -91,7 +86,6 @@
             </div>
           </form>
 
-          <!-- 회원 탈퇴 -->
           <div class="account-delete-section">
             <button
               type="button"
@@ -176,7 +170,6 @@
         }
       }
 
-      // ✅ 닉네임 유효성 검사 (입력 제한 없음, 헬퍼 메시지만)
       function validateNickname() {
         const nicknameInput = document.getElementById("userNickname");
         const nickname = nicknameInput.value.trim();
@@ -357,7 +350,6 @@
 
             let errorMessage = "회원정보 수정에 실패했습니다";
 
-            // ✅ 409 에러 처리 (닉네임 중복)
             if (error.status === 409) {
               if (error.message && error.message.includes("닉네임")) {
                 showFieldError(document.getElementById("userNickname"), "nicknameError", "중복된 닉네임입니다");
