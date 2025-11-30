@@ -3,8 +3,8 @@ window.PostService = class {
     this.apiService = window.apiService;
   }
 
-  getPosts(page = 0, size = 10) {
-    return this.apiService.get(`/posts?page=${page}&size=${size}`);
+  getPosts(page = 0, size = 8, sort = 'latest') {
+    return this.apiService.get(`/posts?page=${page}&size=${size}&sort=${sort}`);
   }
 
   getPost(postId) {

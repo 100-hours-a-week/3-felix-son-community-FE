@@ -17,9 +17,17 @@
             글쓰기
           </a>
         </div>
-        <div id="pageInfo" class="page-info"></div>
-        <div id="postList" class="post-list">
+        <div class="list-controls">
+          <div id="pageInfo" class="page-info"></div>
+          <div class="sort-dropdown">
+            <select id="sortSelect" class="sort-select">
+              <option value="latest">최신순</option>
+              <option value="views">조회수순</option>
+              <option value="likes">좋아요순</option>
+            </select>
+          </div>
         </div>
+        <div id="postList" class="post-list"></div>
 
         <div
           id="loadingIndicator"
@@ -51,13 +59,22 @@
       let isLoading = false;
       let isLastPage = false;
       let totalElements = 0;
+      let currentSort = "latest";
 
       document.addEventListener("DOMContentLoaded", async () => {
-       
         updateWriteButton();
 
-        await loadPosts();
+        // ✅ 저장된 정렬 상태 복원
+        const savedSort = sessionStorage.getItem("postListSort") || "latest";
+        currentSort = savedSort;
 
+        const sortSelect = document.getElementById("sortSelect");
+        if (sortSelect) {
+          sortSelect.value = savedSort; // ✅ 드롭다운 선택 값도 복원
+          sortSelect.addEventListener("change", handleSortChange);
+        }
+
+        await loadPosts();
         window.addEventListener("scroll", handleScroll);
       });
 
@@ -79,6 +96,24 @@
         }
       }
 
+      function handleSortChange(event) {
+        const newSort = event.target.value;
+        console.log("========================================");
+        console.log("정렬 변경: " + currentSort + " → " + newSort);
+        console.log("========================================");
+
+        currentSort = newSort;
+        sessionStorage.setItem("postListSort", newSort); // ✅ 정렬 상태 저장
+
+        currentPage = 0;
+        isLastPage = false;
+
+        const postList = document.getElementById("postList");
+        postList.innerHTML = "";
+
+        loadPosts();
+      }
+
       function handleScroll() {
         if (isLoading || isLastPage) return;
 
@@ -97,7 +132,17 @@
           isLoading = true;
           showLoadingIndicator();
 
-          const response = await postService.getPosts(currentPage, 10);
+          console.log("========================================");
+          console.log(
+            "loadPosts 호출 - 페이지: " + currentPage + ", 정렬: " + currentSort
+          );
+          console.log("========================================");
+
+          const response = await postService.getPosts(
+            currentPage,
+            8,
+            currentSort
+          );
 
           if (currentPage === 0) {
             totalElements = response.totalElements;
@@ -131,13 +176,13 @@
           } else if (currentPage === 0) {
             const postList = document.getElementById("postList");
             postList.innerHTML = `
-                        <div class="error-message">
-                            <p>게시글을 불러오는데 실패했습니다.</p>
-                            <button class="btn btn-primary" onclick="retryLoadPosts()">
-                                다시 시도
-                            </button>
-                        </div>
-                    `;
+          <div class="error-message">
+            <p>게시글을 불러오는데 실패했습니다.</p>
+            <button class="btn btn-primary" onclick="retryLoadPosts()">
+              다시 시도
+            </button>
+          </div>
+        `;
           } else {
             showError("게시글을 더 불러오는데 실패했습니다.");
           }
@@ -151,6 +196,30 @@
         currentPage = 0;
         isLastPage = false;
         await loadPosts();
+      }
+
+      function extractFirstImage(content) {
+        if (!content) return null;
+
+        const markdownImageRegex = /!\[.*?\]\((.*?)\)/;
+        const markdownMatch = content.match(markdownImageRegex);
+        if (markdownMatch && markdownMatch[1]) {
+          return markdownMatch[1];
+        }
+
+        const htmlImageRegex = /<img[^>]+src=["']([^"']+)["']/;
+        const htmlMatch = content.match(htmlImageRegex);
+        if (htmlMatch && htmlMatch[1]) {
+          return htmlMatch[1];
+        }
+
+        const urlImageRegex = /(https?:\/\/[^\s]+\.(jpg|jpeg|png|gif|webp))/i;
+        const urlMatch = content.match(urlImageRegex);
+        if (urlMatch && urlMatch[1]) {
+          return urlMatch[1];
+        }
+
+        return null;
       }
 
       function appendPosts(posts) {
@@ -167,39 +236,79 @@
               likesCount: 0,
             };
 
-            return `
-                    <article class="post-card" onclick="goToPost('${
-                      post.postId
-                    }')">
-                        <div class="post-header">
-                            <div class="post-author-info">
-                                ${
-                                  profileImageUrl
-                                    ? `<img src="${profileImageUrl}" 
-                                          alt="${escapeHtml(nickname)}" 
-                                          class="author-avatar-small"
-                                          onerror="this.style.display='none'">`
-                                    : '<div class="author-avatar-small default-avatar">👤</div>'
-                                }
-                                <span class="author-nickname">${escapeHtml(
-                                  nickname
-                                )}</span>
-                            </div>
-                            <span class="post-date">${formatDate(
-                              post.createdAt
-                            )}</span>
-                        </div>
-                        <h3>${escapeHtml(post.title || "제목 없음")}</h3>
-                        <p class="post-preview">
-                            ${escapeHtml(getPreview(post.body))}
-                        </p>
-                        <div class="post-stats">
-                            <span>👁️ ${stats.viewsCount}</span>
-                            <span>💬 ${stats.commentCount}</span>
-                            <span>❤️ ${stats.likesCount}</span>
-                        </div>
-                    </article>
-                `;
+            const imageUrl = extractFirstImage(post.body);
+            const hasImage = !!imageUrl;
+
+            if (hasImage) {
+              return `
+            <article class="post-card post-card-image" onclick="goToPost('${
+              post.postId
+            }')">
+              <div class="post-thumbnail">
+                <img src="${imageUrl}" alt="${escapeHtml(
+                post.title || "게시글 이미지"
+              )}" 
+                     onerror="this.parentElement.innerHTML='<div class=\\'thumbnail-error\\'>이미지 로드 실패</div>'">
+              </div>
+              <div class="post-card-overlay">
+                <div class="post-header-compact">
+                  ${
+                    profileImageUrl
+                      ? `<img src="${profileImageUrl}" 
+                            alt="${escapeHtml(nickname)}" 
+                            class="author-avatar-tiny"
+                            onerror="this.style.display='none'">`
+                      : '<div class="author-avatar-tiny default-avatar">👤</div>'
+                  }
+                  <span class="author-nickname-small">${escapeHtml(
+                    nickname
+                  )}</span>
+                </div>
+                <h3 class="post-title-compact">${escapeHtml(
+                  post.title || "제목 없음"
+                )}</h3>
+                <div class="post-stats-compact">
+                  <span>👁️ ${stats.viewsCount}</span>
+                  <span>💬 ${stats.commentCount}</span>
+                  <span>❤️ ${stats.likesCount}</span>
+                </div>
+              </div>
+            </article>
+          `;
+            } else {
+              return `
+            <article class="post-card post-card-text" onclick="goToPost('${
+              post.postId
+            }')">
+              <div class="post-text-box">
+                ${escapeHtml(getPreview(post.body, 150))}
+              </div>
+              <div class="post-card-overlay">
+                <div class="post-header-compact">
+                  ${
+                    profileImageUrl
+                      ? `<img src="${profileImageUrl}" 
+                            alt="${escapeHtml(nickname)}" 
+                            class="author-avatar-tiny"
+                            onerror="this.style.display='none'">`
+                      : '<div class="author-avatar-tiny default-avatar">👤</div>'
+                  }
+                  <span class="author-nickname-small">${escapeHtml(
+                    nickname
+                  )}</span>
+                </div>
+                <h3 class="post-title-compact">${escapeHtml(
+                  post.title || "제목 없음"
+                )}</h3>
+                <div class="post-stats-compact">
+                  <span>👁️ ${stats.viewsCount}</span>
+                  <span>💬 ${stats.commentCount}</span>
+                  <span>❤️ ${stats.likesCount}</span>
+                </div>
+              </div>
+            </article>
+          `;
+            }
           })
           .join("");
 
@@ -217,8 +326,8 @@
       function displayPageInfo(response) {
         const pageInfo = document.getElementById("pageInfo");
         pageInfo.innerHTML = `
-                <span>전체 게시글: ${response.totalElements}개</span>
-            `;
+      <span>전체 게시글: ${response.totalElements}개</span>
+    `;
       }
 
       function showLoadingIndicator() {

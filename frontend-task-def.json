@@ -1,0 +1,45 @@
+{
+    "family": "frontend-task-def",
+    "networkMode": "awsvpc",
+    "executionRoleArn": "arn:aws:iam::172132042241:role/ecsTaskExecutionRole",
+    "cpu": "512",
+    "memory": "1024",
+    "runtimePlatform": {
+        "cpuArchitecture": "X86_64",
+        "operatingSystemFamily": "LINUX"
+    },
+    "containerDefinitions": [
+        {
+            "name": "FE-Container",
+            "image": "172132042241.dkr.ecr.ap-northeast-2.amazonaws.com/frontend-app:20251130-rev1",
+            "cpu": 0,
+            "memoryReservation": 1024,
+            "portMappings": [
+                {
+                    "name": "frontend-app",
+                    "containerPort": 3000,
+                    "hostPort": 3000,
+                    "protocol": "tcp",
+                    "appProtocol": "http"
+                }
+            ],
+            "essential": true,
+            "environment": [],
+            "mountPoints": [],
+            "volumesFrom": [],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/frontend-task-def",
+                    "awslogs-region": "ap-northeast-2",
+                    "awslogs-stream-prefix": "ecs",
+                    "awslogs-create-group": "true"
+                }
+            },
+            "systemControls": []
+        }
+    ],
+    "volumes": [],
+    "placementConstraints": [],
+    "tags": []
+}
