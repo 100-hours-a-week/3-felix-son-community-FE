@@ -116,7 +116,6 @@
       let hasImageChanged = false;
 
       document.addEventListener("DOMContentLoaded", async () => {
-
         if (!authManager.isLoggedIn()) {
           showError("로그인이 필요합니다");
           setTimeout(() => {
@@ -177,17 +176,29 @@
         clearFieldError(nicknameInput, "nicknameError");
 
         if (nickname.length === 0) {
-          showFieldError(nicknameInput, "nicknameError", "닉네임을 입력해주세요");
+          showFieldError(
+            nicknameInput,
+            "nicknameError",
+            "닉네임을 입력해주세요"
+          );
           return false;
         }
 
         if (/\s/.test(nickname)) {
-          showFieldError(nicknameInput, "nicknameError", "띄어쓰기를 없애주세요");
+          showFieldError(
+            nicknameInput,
+            "nicknameError",
+            "띄어쓰기를 없애주세요"
+          );
           return false;
         }
 
         if (nickname.length > 10) {
-          showFieldError(nicknameInput, "nicknameError", "닉네임은 최대 10자까지 작성 가능합니다");
+          showFieldError(
+            nicknameInput,
+            "nicknameError",
+            "닉네임은 최대 10자까지 작성 가능합니다"
+          );
           return false;
         }
 
@@ -327,12 +338,10 @@
           submitBtn.textContent = "수정 중...";
 
           try {
-            await userService.updateUserProfile(
+            const updatedUser = await userService.updateUserProfile(
               nickname,
               selectedProfileImageFile
             );
-
-            const updatedUser = await userService.getUserProfile();
             authManager.setUser(updatedUser);
             authManager.updateUI();
 
@@ -352,7 +361,11 @@
 
             if (error.status === 409) {
               if (error.message && error.message.includes("닉네임")) {
-                showFieldError(document.getElementById("userNickname"), "nicknameError", "중복된 닉네임입니다");
+                showFieldError(
+                  document.getElementById("userNickname"),
+                  "nicknameError",
+                  "중복된 닉네임입니다"
+                );
                 submitBtn.disabled = false;
                 submitBtn.textContent = "수정하기";
                 return;

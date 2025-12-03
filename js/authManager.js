@@ -1,6 +1,6 @@
 window.AuthManager = class {
   constructor() {
-    this.currentUser = null;
+    this.currentUser = this.loadUserFromStorage();
     this.apiService = window.apiService;
     this.authUiManager = new AuthUiManager(this);
     this.userInfoPromise = null;
@@ -12,6 +12,39 @@ window.AuthManager = class {
     const token = this.getToken();
     console.log("저장된 토큰:", token ? `${token.substring(0, 20)}...` : "없음");
     console.log("로그인 상태:", this.isLoggedIn());
+  }
+
+  loadUserFromStorage(){
+    try{
+      const raw = sessionStorage.getItem("user");
+      if(!raw) return null;
+      const user = JSON.parse(raw);
+
+      if (!user.userId || !user.nickname) return null;
+      return user;
+    }catch(e){
+      console.error("저장된 사용자 정보 파싱 실패:", e);
+      return null;
+    }
+  }
+
+  saveUserToStorage(user){
+    try{
+      const safeUser = {
+        userId: user.userId,
+        email: user.email,
+        nickname: user.nickname,
+        profileImageUrl: user.profileImageUrl,
+      };
+      sessionStorage.setItem("user",JSON.stringify(safeUser));
+    }
+    catch(e){
+      console.error("사용자 정보 저장 실패:", e)
+    }
+  }
+
+  removeUserFromStorage(){
+    sessionStorage.removeItem("user")
   }
 
   getToken() {
@@ -33,7 +66,16 @@ window.AuthManager = class {
 
   setUser(user) {
     this.currentUser = user;
-    console.log("✅ 사용자 정보 메모리 저장:", user.nickname);
+    this.saveUserToStorage(user);
+    console.log("✅ 사용자 정보 메모리+스토리지 저장:", user.nickname);
+  }
+
+  clearAuthState(){
+    this.removeToken();
+    this.currentUser = null;
+    this.userInfoPromise = null;
+    this.removeUserFromStorage();
+    console.log("인증상태 초기화");
   }
 
   isLoggedIn() {
@@ -71,8 +113,7 @@ window.AuthManager = class {
     
         if (error.status === 401) {
           console.log("토큰이 유효하지 않음 - 제거");
-          this.removeToken();
-          this.currentUser = null;
+          this.clearAuthState();
         }
         
         return null;
@@ -159,12 +200,6 @@ window.AuthManager = class {
     showSuccess("로그아웃 되었습니다.");
   }
 
-  clearAuthState() {
-    this.removeToken();
-    this.currentUser = null;
-    this.userInfoPromise = null;
-    console.log("✅ 인증 상태 초기화 완료");
-  }
 
   async refreshAccessToken() {
     try {
