@@ -5,7 +5,7 @@ const isLocal =
 
 const BACKEND_BASE_URL = isLocal
   ? "http://localhost:8080"
-  : "https://www.justforshare.click/api";
+  : "https://www.justforshare.click";
 
 window.Layout = class {
   static getHeaderHTML() {
