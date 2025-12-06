@@ -1,3 +1,11 @@
+  const isLocal =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+
+  const BACKEND_BASE_URL = isLocal
+  ? "http://localhost:8080"
+  : "https://www.justforshare.click"; 
+
 window.Layout = class {
   static getHeaderHTML() {
     return `
@@ -20,17 +28,18 @@ window.Layout = class {
 
   static getFooterHTML() {
     return `
-    <footer class="footer">
-      <div class="container">
-        <p>&copy; 2025 Just For Share. All rights reserved.</p>
-        <div class="footer-links">
-          <a href="http://localhost:8080/terms/service" target="_blank">이용약관</a>
-          <a href="http://localhost:8080/terms/privacy" target="_blank">개인정보처리방침</a>
+      <footer class="footer">
+        <div class="container">
+          <p>&copy; 2025 Just For Share. All rights reserved.</p>
+          <div class="footer-links">
+            <a href="${BACKEND_BASE_URL}/terms/service" target="_blank">이용약관</a>
+            <a href="${BACKEND_BASE_URL}/terms/privacy" target="_blank">개인정보처리방침</a>
+          </div>
         </div>
-      </div>
-    </footer>
-  `;
+      </footer>
+    `;
   }
+
 
   static loadHeader() {
     const headerHTML = this.getHeaderHTML();
