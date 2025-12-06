@@ -1,4 +1,4 @@
-// 백엔드 베이스 URL 환경별 설정
+// Layout.js
 const isLocal =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
@@ -33,8 +33,8 @@ window.Layout = class {
         <div class="container">
           <p>&copy; 2025 Just For Share. All rights reserved.</p>
           <div class="footer-links">
-            <a href="${BACKEND_BASE_URL}/terms/service" target="_blank">이용약관</a>
-            <a href="${BACKEND_BASE_URL}/terms/privacy" target="_blank">개인정보처리방침</a>
+            <a href="${BACKEND_BASE_URL}/api/terms/service" target="_blank">이용약관</a>
+            <a href="${BACKEND_BASE_URL}/api/terms/privacy" target="_blank">개인정보처리방침</a>
           </div>
         </div>
       </footer>
