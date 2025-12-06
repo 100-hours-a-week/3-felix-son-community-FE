@@ -10,29 +10,30 @@ window.FileUploadService = class {
   }
 
   async getPresignedUrl(file, requireAuth = true) {
-    console.log('🔑 Presigned URL 요청 중...');
     
     const headers = {
       'Content-Type': 'application/json'
+    };
+    
+    const requestBody = {
+      fileName: file.name,
+      contentType: file.type,
+      fileSize: file.size 
     };
     
     if (requireAuth) {
       const token = this.getToken();
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
-        console.log('🔐 인증 토큰 포함');
       }
     } else {
-      console.log('🔓 인증 없이 요청 (회원가입)');
+      requestBody.purpose = 'signup'; 
     }
     
     const response = await fetch(this.apiGatewayUrl, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify({
-        fileName: file.name,
-        contentType: file.type
-      })
+      body: JSON.stringify(requestBody)
     });
 
     if (!response.ok) {
@@ -53,27 +54,31 @@ window.FileUploadService = class {
 
     for (const file of files) {
       try {
-        console.log('📤 업로드 시작:', file.name, file.size, 'bytes');
+        
+        const maxSize = 10 * 1024 * 1024;
+        if (file.size > maxSize) {
+          throw new Error('파일 크기는 10MB 이하여야 합니다.');
+        }
+        
         const presignData = await this.getPresignedUrl(file, requireAuth);
 
         await this.uploadToS3(presignData.uploadUrl, file);
-        console.log('✅ S3 업로드 완료');
 
-        const imageUrl = presignData.imageUrl; 
+        const imageUrl = presignData.imageUrl;
         uploadResults.push(imageUrl);
+        console.log('업로드 완료:', imageUrl);
 
       } catch (error) {
-        console.error('❌ 업로드 에러:', error);
+        console.error('업로드 에러:', error);
         alert(`이미지 업로드 실패: ${error.message || '알 수 없는 오류'}`);
         throw error;
       }
     }
 
     return { urls: uploadResults };
-}
+  }
 
   async uploadToS3(presignedUrl, file) {
-    console.log('☁️ S3 업로드 중...');
     
     const response = await fetch(presignedUrl, {
       method: 'PUT',
