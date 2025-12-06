@@ -82,10 +82,8 @@ window.Layout = class {
   static init() {
     this.loadHeader();
     this.loadFooter();
-    console.log("✅ 공통 레이아웃 로드 완료");
     if (typeof authManager !== "undefined") {
       authManager.updateUI();
-      console.log("✅ 인증 UI 업데이트 완료");
     }
   }
 };

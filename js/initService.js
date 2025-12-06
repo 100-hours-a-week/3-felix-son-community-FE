@@ -1,3 +1,7 @@
+window.IS_DEV =
+  window.location.hostname === "localhost" ||
+  window.location.hostname === "127.0.0.1";
+
 window.apiService = new window.ApiService();
 window.postService = new window.PostService();
 window.commentService = new window.CommentService();

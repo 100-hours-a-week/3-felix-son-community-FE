@@ -8,43 +8,51 @@ window.AuthManager = class {
   }
 
   init() {
-    console.log("AuthManager 초기화 시작");
-    const token = this.getToken();
-    console.log("저장된 토큰:", token ? `${token.substring(0, 20)}...` : "없음");
-    console.log("로그인 상태:", this.isLoggedIn());
+    if (window.IS_DEV) {
+      console.log("AuthManager 초기화 시작");
+      const token = this.getToken();
+      console.log(
+        "저장된 토큰:",
+        token ? `${token.substring(0, 20)}...` : "없음"
+      );
+      console.log("로그인 상태:", this.isLoggedIn());
+    }
   }
 
-  loadUserFromStorage(){
-    try{
+  loadUserFromStorage() {
+    try {
       const raw = sessionStorage.getItem("user");
-      if(!raw) return null;
+      if (!raw) return null;
       const user = JSON.parse(raw);
 
       if (!user.userId || !user.nickname) return null;
       return user;
-    }catch(e){
-      console.error("저장된 사용자 정보 파싱 실패:", e);
+    } catch (e) {
+      if (window.IS_DEV) {
+        console.error("저장된 사용자 정보 파싱 실패:", e);
+      }
       return null;
     }
   }
 
-  saveUserToStorage(user){
-    try{
+  saveUserToStorage(user) {
+    try {
       const safeUser = {
         userId: user.userId,
         email: user.email,
         nickname: user.nickname,
         profileImageUrl: user.profileImageUrl,
       };
-      sessionStorage.setItem("user",JSON.stringify(safeUser));
-    }
-    catch(e){
-      console.error("사용자 정보 저장 실패:", e)
+      sessionStorage.setItem("user", JSON.stringify(safeUser));
+    } catch (e) {
+      if (window.IS_DEV) {
+        console.error("사용자 정보 저장 실패:", e);
+      }
     }
   }
 
-  removeUserFromStorage(){
-    sessionStorage.removeItem("user")
+  removeUserFromStorage() {
+    sessionStorage.removeItem("user");
   }
 
   getToken() {
@@ -53,11 +61,15 @@ window.AuthManager = class {
 
   setToken(token) {
     if (!token) {
-      console.error("❌ 토큰이 null 또는 undefined입니다!");
+      if (window.IS_DEV) {
+        console.error("❌ 토큰이 null 또는 undefined입니다!");
+      }
       return;
     }
     sessionStorage.setItem("token", token);
-    console.log("✅ Access Token 저장 완료 (세션스토리지)");
+    if (window.IS_DEV) {
+      console.log("✅ Access Token 저장 완료 (세션스토리지)");
+    }
   }
 
   removeToken() {
@@ -67,15 +79,19 @@ window.AuthManager = class {
   setUser(user) {
     this.currentUser = user;
     this.saveUserToStorage(user);
-    console.log("✅ 사용자 정보 메모리+스토리지 저장:", user.nickname);
+    if (window.IS_DEV) {
+      console.log("✅ 사용자 정보 메모리+스토리지 저장:", user.nickname);
+    }
   }
 
-  clearAuthState(){
+  clearAuthState() {
     this.removeToken();
     this.currentUser = null;
     this.userInfoPromise = null;
     this.removeUserFromStorage();
-    console.log("인증상태 초기화");
+    if (window.IS_DEV) {
+      console.log("인증상태 초기화");
+    }
   }
 
   isLoggedIn() {
@@ -88,7 +104,9 @@ window.AuthManager = class {
 
   async ensureUserInfo() {
     if (!this.getToken()) {
-      console.warn("토큰이 없어서 사용자 정보를 가져올 수 없습니다.");
+      if (window.IS_DEV) {
+        console.warn("토큰이 없어서 사용자 정보를 가져올 수 없습니다.");
+      }
       return null;
     }
 
@@ -100,22 +118,30 @@ window.AuthManager = class {
       return this.userInfoPromise;
     }
 
-    console.log("🔄 사용자 정보 로딩 중...");
+    if (window.IS_DEV) {
+      console.log("🔄 사용자 정보 로딩 중...");
+    }
     this.userInfoPromise = this.apiService
       .get("/users/me")
       .then((user) => {
         this.setUser(user);
-        console.log("✅ 사용자 정보 로드 성공:", user.nickname);
+        if (window.IS_DEV) {
+          console.log("✅ 사용자 정보 로드 성공:", user.nickname);
+        }
         return user;
       })
       .catch((error) => {
-        console.error("❌ 사용자 정보 로드 실패:", error);
-    
+        if (window.IS_DEV) {
+          console.error("❌ 사용자 정보 로드 실패:", error);
+        }
+
         if (error.status === 401) {
-          console.log("토큰이 유효하지 않음 - 제거");
+          if (window.IS_DEV) {
+            console.log("토큰이 유효하지 않음 - 제거");
+          }
           this.clearAuthState();
         }
-        
+
         return null;
       })
       .finally(() => {
@@ -127,18 +153,24 @@ window.AuthManager = class {
 
   async login(email, password) {
     try {
-      console.log("로그인 시도:", email);
+      if (window.IS_DEV) {
+        console.log("로그인 시도:", email);
+      }
       const response = await this.apiService.post(
         "/auth/login",
         { email, password },
         false,
         { credentials: "include" }
       );
-      console.log("로그인 응답:", response);
+      if (window.IS_DEV) {
+        console.log("로그인 응답:", response);
+      }
 
       if (response.accessToken) {
         this.setToken(response.accessToken);
-        console.log("✅ 토큰 저장 완료:", response.accessToken.substring(0, 20) + "...");
+        if (window.IS_DEV) {
+          console.log("✅ 토큰 저장 완료");
+        }
       } else {
         throw new Error("로그인 응답에 토큰이 없습니다.");
       }
@@ -155,7 +187,9 @@ window.AuthManager = class {
       showSuccess("로그인 성공!");
       return true;
     } catch (error) {
-      console.error("로그인 실패:", error);
+      if (window.IS_DEV) {
+        console.error("로그인 실패:", error);
+      }
       showError(error.message || "로그인에 실패했습니다.");
       return false;
     }
@@ -163,7 +197,9 @@ window.AuthManager = class {
 
   async signup(email, password, nickname, profileImageUrl) {
     try {
-      console.log("회원가입 시도:", email);
+      if (window.IS_DEV) {
+        console.log("회원가입 시도:", email);
+      }
 
       const response = await this.apiService.post(
         "/auth/signup",
@@ -172,9 +208,10 @@ window.AuthManager = class {
         { credentials: "include" }
       );
 
-      console.log("회원가입 응답:", response);
-
-      console.log("✅ 회원가입 성공 - 로그인 페이지로 이동합니다");
+      if (window.IS_DEV) {
+        console.log("회원가입 응답:", response);
+        console.log("✅ 회원가입 성공 - 로그인 페이지로 이동합니다");
+      }
 
       return {
         success: true,
@@ -183,7 +220,9 @@ window.AuthManager = class {
         data: response,
       };
     } catch (error) {
-      console.error("회원가입 실패:", error);
+      if (window.IS_DEV) {
+        console.error("회원가입 실패:", error);
+      }
       throw error;
     }
   }
@@ -192,7 +231,9 @@ window.AuthManager = class {
     try {
       await this.apiService.post("/auth/logout");
     } catch (error) {
-      console.error("로그아웃 요청 실패:", error);
+      if (window.IS_DEV) {
+        console.error("로그아웃 요청 실패:", error);
+      }
     }
 
     this.clearAuthState();
@@ -200,10 +241,11 @@ window.AuthManager = class {
     showSuccess("로그아웃 되었습니다.");
   }
 
-
   async refreshAccessToken() {
     try {
-      console.log("🔄 Access Token 갱신 시도");
+      if (window.IS_DEV) {
+        console.log("🔄 Access Token 갱신 시도");
+      }
       const response = await fetch("/api/auth/refresh", {
         method: "POST",
         credentials: "include",
@@ -211,7 +253,9 @@ window.AuthManager = class {
       });
 
       if (!response.ok) {
-        console.error("❌ Token refresh 실패:", response.status);
+        if (window.IS_DEV) {
+          console.error("❌ Token refresh 실패:", response.status);
+        }
         return false;
       }
 
@@ -219,12 +263,16 @@ window.AuthManager = class {
 
       if (data.accessToken) {
         this.setToken(data.accessToken);
-        console.log("✅ Access Token 갱신 성공");
+        if (window.IS_DEV) {
+          console.log("✅ Access Token 갱신 성공");
+        }
         return true;
       }
       return false;
     } catch (error) {
-      console.error("❌ Access Token 갱신 실패:", error);
+      if (window.IS_DEV) {
+        console.error("❌ Access Token 갱신 실패:", error);
+      }
       return false;
     }
   }

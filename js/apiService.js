@@ -1,12 +1,14 @@
 window.ApiService = class {
   constructor(baseUrl) {
-    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-    const defaultUrl = isLocal 
-      ? 'http://localhost:8080/api'
-      : `/api`; 
-    
+    const isLocal =
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1";
+    const defaultUrl = isLocal ? "http://localhost:8080/api" : `/api`;
+
     this.baseUrl = baseUrl || defaultUrl;
-    console.log("API Base URL:", this.baseUrl);
+    if (window.IS_DEV) {
+      console.log("API Base URL:", this.baseUrl);
+    }
   }
 
   getToken() {
@@ -20,15 +22,16 @@ window.ApiService = class {
       const token = this.getToken();
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
-        console.log(
-          "Authorization 헤더 추가:",
-          `Bearer ${token.substring(0, 20)}...`
-        );
-      } else {
+        if (window.IS_DEV) {
+          console.log("Authorization 헤더 추가");
+        }
+      } else if (window.IS_DEV) {
         console.warn("토큰이 없습니다!");
       }
     }
-    console.log("최종 헤더:", headers);
+    if (window.IS_DEV) {
+      console.log("최종 헤더:", headers);
+    }
     return headers;
   }
 
@@ -51,12 +54,14 @@ window.ApiService = class {
       config.body = JSON.stringify(config.body);
     }
 
-    console.log("API 요청:", {
-      url,
-      method: config.method || "GET",
-      headers: config.headers,
-      body: options.body,
-    });
+    if (window.IS_DEV) {
+      console.log("API 요청:", {
+        url,
+        method: config.method || "GET",
+        headers: config.headers,
+        body: options.body,
+      });
+    }
 
     try {
       let response = await fetch(url, config);
@@ -66,7 +71,9 @@ window.ApiService = class {
           throw { status: 401, message: "인증이 필요합니다." };
         }
 
-        console.log("401 에러 - Access Token 갱신 시도");
+        if (window.IS_DEV) {
+          console.log("401 에러 - Access Token 갱신 시도");
+        }
         const refreshed = await authManager.refreshAccessToken();
 
         if (refreshed) {
@@ -87,7 +94,9 @@ window.ApiService = class {
       }
 
       if (!response.ok) {
-        console.error("API 에러 상세:", { status: response.status, url, data });
+        if (window.IS_DEV) {
+          console.error("API 에러 상세:", { status: response.status, url, data });
+        }
         throw {
           status: response.status,
           message: data?.message || data || "요청 실패",
@@ -97,7 +106,9 @@ window.ApiService = class {
 
       return data;
     } catch (error) {
-      console.error("API 요청 오류:", { endpoint, error });
+      if (window.IS_DEV) {
+        console.error("API 요청 오류:", { endpoint, error });
+      }
       throw error;
     }
   }

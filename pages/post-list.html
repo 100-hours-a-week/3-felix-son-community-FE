@@ -64,13 +64,13 @@
       document.addEventListener("DOMContentLoaded", async () => {
         updateWriteButton();
 
-        // ✅ 저장된 정렬 상태 복원
+
         const savedSort = sessionStorage.getItem("postListSort") || "latest";
         currentSort = savedSort;
 
         const sortSelect = document.getElementById("sortSelect");
         if (sortSelect) {
-          sortSelect.value = savedSort; // ✅ 드롭다운 선택 값도 복원
+          sortSelect.value = savedSort;
           sortSelect.addEventListener("change", handleSortChange);
         }
 
@@ -98,12 +98,9 @@
 
       function handleSortChange(event) {
         const newSort = event.target.value;
-        console.log("========================================");
-        console.log("정렬 변경: " + currentSort + " → " + newSort);
-        console.log("========================================");
 
         currentSort = newSort;
-        sessionStorage.setItem("postListSort", newSort); // ✅ 정렬 상태 저장
+        sessionStorage.setItem("postListSort", newSort);
 
         currentPage = 0;
         isLastPage = false;

@@ -54,24 +54,13 @@ window.FileUploadService = class {
     for (const file of files) {
       try {
         console.log('📤 업로드 시작:', file.name, file.size, 'bytes');
-        
         const presignData = await this.getPresignedUrl(file, requireAuth);
-        console.log('✅ Presigned Data:', presignData);
 
         await this.uploadToS3(presignData.uploadUrl, file);
         console.log('✅ S3 업로드 완료');
 
-        let imageUrl;
-        if (presignData.isAuthenticated) {
-          imageUrl = presignData.imageUrls.large;
-          console.log('🔐 인증 사용자 - large URL 사용:', imageUrl);
-        } else {
-          imageUrl = presignData.imageUrl;
-          console.log('🔓 미인증 사용자 - 원본 URL 사용:', imageUrl);
-        }
-        
+        const imageUrl = presignData.imageUrl; 
         uploadResults.push(imageUrl);
-        console.log('🎉 업로드 완료:', presignData.fileName);
 
       } catch (error) {
         console.error('❌ 업로드 에러:', error);
@@ -81,7 +70,7 @@ window.FileUploadService = class {
     }
 
     return { urls: uploadResults };
-  }
+}
 
   async uploadToS3(presignedUrl, file) {
     console.log('☁️ S3 업로드 중...');

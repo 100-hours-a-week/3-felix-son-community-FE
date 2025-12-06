@@ -70,17 +70,5 @@ app.use((req, res) => {
 app.listen(PORT, () => {
     console.log('========================================');
     console.log('프론트엔드 서버 실행 중');
-    console.log(`주소: http://localhost:${PORT}`);
-    console.log('========================================');
-    console.log('');
-    console.log('접속 가능한 URL:');
-    console.log(`- 홈: http://localhost:${PORT}/`);
-    console.log(`- 로그인: http://localhost:${PORT}/login`);
-    console.log(`- 회원가입: http://localhost:${PORT}/register`);
-    console.log(`- 게시글 목록: http://localhost:${PORT}/posts`);
-    console.log(`- 글쓰기: http://localhost:${PORT}/posts/write`);
-    console.log('========================================');
-    console.log('');
-    console.log('백엔드 API 서버는 별도로 8080 포트에서 실행하세요!');
     console.log('========================================');
 });
