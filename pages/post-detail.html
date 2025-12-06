@@ -77,6 +77,7 @@
     <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
     <script src="/js/initService.js"></script>
+    <script src="/js/utils.js"></script>
 
     <script>
       let currentPost = null;
@@ -182,7 +183,7 @@
                             <div class="post-date-info">
                                 <span>작성: ${formatDate(post.createdAt)}</span>
                                 ${
-                                  post.updatedAt
+                                  post.updatedAt && post.updatedAt !== post.createdAt
                                     ? `<span>수정: ${formatDate(
                                         post.updatedAt
                                       )}</span>`
@@ -568,23 +569,7 @@
       }
 
       function formatDate(dateString) {
-        if (!dateString) return "";
-
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now - date;
-
-        if (diff < 60000) return "방금 전";
-        if (diff < 3600000) return `${Math.floor(diff / 60000)}분 전`;
-        if (diff < 86400000) return `${Math.floor(diff / 3600000)}시간 전`;
-        if (diff < 604800000) return `${Math.floor(diff / 86400000)}일 전`;
-
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        const hours = String(date.getHours()).padStart(2, "0");
-        const minutes = String(date.getMinutes()).padStart(2, "0");
-        return `${year}-${month}-${day} ${hours}:${minutes}`;
+        return DateFormatter.formatRelativeTime(dateString);
       }
     </script>
   </body>

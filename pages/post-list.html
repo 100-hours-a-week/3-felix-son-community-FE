@@ -7,6 +7,23 @@
     <link rel="stylesheet" href="/css/base.css" />
     <link rel="stylesheet" href="/css/components.css" />
     <link rel="stylesheet" href="/css/pages.css" />
+    <style>
+      .post-created-time {
+        position: absolute;
+        bottom: 10px;
+        right: 15px;
+        font-size: 0.85rem;
+        color: #ffffff;
+        padding: 4px 8px;
+        border-radius: 4px;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+      }
+
+      .post-card {
+        position: relative;
+      }
+
+    </style>
   </head>
   <body>
     <main class="main-content">
@@ -54,6 +71,7 @@
     <script src="/js/authManager.js"></script>
     <script src="/js/layout.js"></script>
     <script src="/js/initService.js"></script>
+    <script src="/js/utils.js"></script>  <!-- ⭐ utils.js 추가 -->
     <script>
       let currentPage = 0;
       let isLoading = false;
@@ -63,7 +81,6 @@
 
       document.addEventListener("DOMContentLoaded", async () => {
         updateWriteButton();
-
 
         const savedSort = sessionStorage.getItem("postListSort") || "latest";
         currentSort = savedSort;
@@ -263,6 +280,9 @@
                   <span>❤️ ${stats.likesCount}</span>
                 </div>
               </div>
+              <div class="post-created-time">작성: ${formatDate(
+                post.createdAt
+              )}</div>
             </article>
           `;
             } else {
@@ -296,6 +316,9 @@
                   <span>❤️ ${stats.likesCount}</span>
                 </div>
               </div>
+              <div class="post-created-time">작성: ${formatDate(
+                post.createdAt
+              )}</div>
             </article>
           `;
             }
@@ -354,30 +377,9 @@
         return div.innerHTML;
       }
 
+      // ⭐ formatDate 함수 수정: DateFormatter 사용
       function formatDate(dateString) {
-        if (!dateString) return "";
-
-        const date = new Date(dateString);
-        const now = new Date();
-        const diff = now - date;
-
-        if (diff < 60000) {
-          return "방금 전";
-        }
-        if (diff < 3600000) {
-          return `${Math.floor(diff / 60000)}분 전`;
-        }
-        if (diff < 86400000) {
-          return `${Math.floor(diff / 3600000)}시간 전`;
-        }
-        if (diff < 604800000) {
-          return `${Math.floor(diff / 86400000)}일 전`;
-        }
-
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, "0");
-        const day = String(date.getDate()).padStart(2, "0");
-        return `${year}-${month}-${day}`;
+        return DateFormatter.formatRelativeTime(dateString);
       }
     </script>
   </body>
