@@ -38,14 +38,6 @@ app.get('/users/me/password', (req, res) => {
     res.sendFile(path.join(__dirname, 'pages', 'pw-edit.html'));
 });
 
-app.get('/terms/service', (req, res) => {
-    res.sendFile(path.join(__dirname, 'pages', 'terms-of-service.html'));
-});
-
-app.get('/terms/privacy', (req, res) => {
-    res.sendFile(path.join(__dirname, 'pages', 'privacy-policy.html'));
-});
-
 
 app.use((req, res) => {
     res.status(404).send(`

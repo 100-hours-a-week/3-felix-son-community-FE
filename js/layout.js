@@ -1,10 +1,11 @@
-  const isLocal =
+// 백엔드 베이스 URL 환경별 설정
+const isLocal =
   window.location.hostname === "localhost" ||
   window.location.hostname === "127.0.0.1";
 
-  const BACKEND_BASE_URL = isLocal
+const BACKEND_BASE_URL = isLocal
   ? "http://localhost:8080"
-  : "https://www.justforshare.click"; 
+  : "https://www.justforshare.click/api";
 
 window.Layout = class {
   static getHeaderHTML() {
@@ -39,7 +40,6 @@ window.Layout = class {
       </footer>
     `;
   }
-
 
   static loadHeader() {
     const headerHTML = this.getHeaderHTML();
