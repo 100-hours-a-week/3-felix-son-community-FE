@@ -21,8 +21,7 @@
               type="email"
               id="email"
               name="email"
-              required
-              autocomplete="email"
+              autocomplete="off"
               placeholder="이메일을 입력하세요"
             />
           </div>
@@ -34,8 +33,7 @@
                 type="password"
                 id="password"
                 name="password"
-                required
-                autocomplete="current-password"
+                autocomplete="off"
                 placeholder="비밀번호를 입력하세요"
               />
               <button
@@ -148,10 +146,10 @@
             const success = await authManager.login(email, password);
 
             if (success) {
-              console.log("✅ 로그인 성공 - 홈으로 이동");
+              console.log("로그인 성공 - 홈으로 이동");
               window.location.href = "/";
             } else {
-              console.error("❌ 로그인 실패");
+              console.error("로그인 실패");
             }
           } catch (error) {
             console.error("로그인 처리 중 오류:", error);

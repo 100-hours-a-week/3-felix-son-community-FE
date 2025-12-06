@@ -67,21 +67,30 @@ window.ApiService = class {
       let response = await fetch(url, config);
 
       if (response.status === 401) {
-        if (typeof authManager === "undefined") {
-          throw { status: 401, message: "인증이 필요합니다." };
-        }
-
         if (window.IS_DEV) {
-          console.log("401 에러 - Access Token 갱신 시도");
+          console.log("🔒 401 에러 - Access Token 갱신 시도");
         }
-        const refreshed = await authManager.refreshAccessToken();
 
-        if (refreshed) {
-          const newToken = this.getToken();
-          config.headers["Authorization"] = `Bearer ${newToken}`;
-          response = await fetch(url, config);
+        if (typeof authManager !== "undefined" && authManager.refreshAccessToken) {
+          const refreshed = await authManager.refreshAccessToken();
+
+          if (refreshed) {
+            if (window.IS_DEV) {
+              console.log("✅ 토큰 갱신 성공 - 재요청");
+            }
+            const newToken = this.getToken();
+            config.headers["Authorization"] = `Bearer ${newToken}`;
+            response = await fetch(url, config);
+          } else {
+            if (window.IS_DEV) {
+              console.log("❌ Refresh Token도 만료 - 로그아웃");
+            }
+            this.handleUnauthorized();
+            throw { status: 401, message: "로그인이 만료되었습니다. 다시 로그인해주세요." };
+          }
         } else {
-          throw { status: 401, message: "인증이 만료되었습니다." };
+          this.handleUnauthorized();
+          throw { status: 401, message: "인증이 필요합니다." };
         }
       }
 
@@ -110,6 +119,33 @@ window.ApiService = class {
         console.error("API 요청 오류:", { endpoint, error });
       }
       throw error;
+    }
+  }
+
+  handleUnauthorized() {
+    if (window.IS_DEV) {
+      console.log("🔓 인증 완전 만료 - 로그아웃 처리");
+    }
+
+    sessionStorage.clear();
+
+    if (typeof authManager !== "undefined") {
+      authManager.clearAuthState();
+    }
+
+    if (window.headerManager) {
+      window.headerManager.updateAuthUI();
+    }
+
+    if (typeof showError === "function") {
+      showError("로그인이 만료되었습니다. 다시 로그인해주세요.");
+    } else {
+      alert("로그인이 만료되었습니다. 다시 로그인해주세요.");
+    }
+
+    const currentPath = window.location.pathname;
+    if (!currentPath.includes('/login') && !currentPath.includes('/signup')) {
+      window.location.href = "/login";
     }
   }
 
