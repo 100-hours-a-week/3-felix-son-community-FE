@@ -301,15 +301,12 @@
 
       async function loadPostForEdit(postId) {
         try {
-          console.log("게시글 로드 시도:", postId);
 
           const post = await postService.getPost(postId);
-          console.log("게시글 로드 성공:", post);
 
           originalPost = post;
 
           const currentUser = authManager.getCurrentUser();
-          console.log("현재 사용자:", currentUser);
 
           if (!currentUser) {
             showError("로그인이 필요합니다.");
@@ -323,14 +320,6 @@
           const isAuthor =
             currentUser.userId === post.user.userId ||
             currentUser.nickname === post.user.nickname;
-
-          console.log("작성자 확인:", {
-            isAuthor,
-            currentUserId: currentUser.userId,
-            postUserId: post.user.userId,
-            currentNickname: currentUser.nickname,
-            postNickname: post.user.nickname,
-          });
 
           if (!isAuthor) {
             showError("게시글 작성자만 수정할 수 있습니다.");
@@ -599,9 +588,7 @@
           );
           if (index !== -1) {
             pendingImageFiles.splice(index, 1);
-            console.log(
-              `이미지 삭제됨: ${tempId}, 남은 이미지: ${pendingImageFiles.length}개`
-            );
+           
           }
         }
 
@@ -739,9 +726,6 @@
 
             const imageUrls = extractImageUrls(body);
 
-            console.log("최종 body:", body);
-            console.log("최종 imageUrls:", imageUrls);
-
             submitBtn.textContent = editMode
               ? "게시글 수정 중..."
               : "게시글 등록 중...";
@@ -801,7 +785,6 @@
           URL.revokeObjectURL(url);
         });
         blobUrls.clear();
-        console.log("Blob URL 정리 완료");
       }
 
       function goBack() {

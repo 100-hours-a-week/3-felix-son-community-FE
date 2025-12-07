@@ -2,7 +2,6 @@ window.FileUploadService = class {
   constructor() {
     this.apiService = window.apiService;
     this.apiGatewayUrl = "https://j9cutt34d2.execute-api.ap-northeast-2.amazonaws.com/presign";
-    console.log("FileUpload - API Gateway URL:", this.apiGatewayUrl);
   }
 
   getToken() {
@@ -66,7 +65,6 @@ window.FileUploadService = class {
 
         const imageUrl = presignData.imageUrl;
         uploadResults.push(imageUrl);
-        console.log('업로드 완료:', imageUrl);
 
       } catch (error) {
         console.error('업로드 에러:', error);

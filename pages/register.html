@@ -526,12 +526,6 @@
         profileImageError.textContent = "";
         profileImageError.classList.remove("show");
 
-        console.log(
-          "이미지 선택 완료:",
-          file.name,
-          (file.size / 1024).toFixed(2),
-          "KB"
-        );
       }
 
       function removeSelectedImage() {
@@ -557,12 +551,10 @@
         profileImageError.textContent = "프로필 사진을 추가해주세요";
         profileImageError.classList.add("show");
 
-        console.log("이미지 제거 완료");
       }
 
       async function uploadProfileImage(file) {
         try {
-          console.log("프로필 이미지 업로드 시작:", file.name);
 
           const result = await window.fileUploadService.uploadImages(
             [file],
@@ -570,7 +562,6 @@
           );
 
           if (result.urls && result.urls.length > 0) {
-            console.log("프로필 이미지 업로드 성공:", result.urls[0]);
             return result.urls[0];
           }
 

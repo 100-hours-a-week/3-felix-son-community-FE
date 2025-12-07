@@ -260,16 +260,10 @@
         submitBtn.disabled = true;
         submitBtn.textContent = "수정 중...";
 
-        console.log("비밀번호 변경 시도:", {
-          hasPassword: !!password,
-          hasConfirmPassword: !!confirmPassword,
-          token: authManager.getToken() ? "토큰 있음" : "토큰 없음",
-        });
 
         try {
           await userService.changePassword(password, confirmPassword);
-
-          console.log("비밀번호 변경 성공");
+          
           showSuccess("비밀번호가 성공적으로 변경되었습니다!");
 
           form.reset();

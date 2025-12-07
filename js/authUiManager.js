@@ -102,14 +102,12 @@ window.AuthUiManager = class {
     profileBtn.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
-      console.log("프로필 버튼 클릭 - 드롭다운 토글");
       dropdown.classList.toggle("show");
     });
 
     document.addEventListener("click", (e) => {
       if (!profileBtn.contains(e.target) && !dropdown.contains(e.target)) {
         if (dropdown.classList.contains("show")) {
-          console.log("외부 클릭 - 드롭다운 닫기");
           dropdown.classList.remove("show");
         }
       }

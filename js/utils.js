@@ -1,4 +1,4 @@
-// utils.js 또는 별도 파일
+// /js/utils.js
 class DateFormatter {
   /**
    * ISO 날짜를 상대 시간으로 표시 (한국 시간 기준)
@@ -46,7 +46,8 @@ class DateFormatter {
   /**
    * 날짜를 "YYYY.MM.DD HH:mm" 형식으로 표시
    */
-  static formatDateTime(date) {
+  static formatDateTime(isoDate) {
+    const date = new Date(isoDate);
     const dateStr = this.formatDate(date);
     const hours = String(date.getHours()).padStart(2, '0');
     const minutes = String(date.getMinutes()).padStart(2, '0');
@@ -54,5 +55,5 @@ class DateFormatter {
   }
 }
 
-// 전역으로 사용 가능하게
 window.DateFormatter = DateFormatter;
+

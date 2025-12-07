@@ -490,8 +490,6 @@
         try {
           const response = await postService.likePost(currentPost.postId);
 
-          console.log("좋아요 API 응답:", response);
-
           let newCount = null;
 
           if (response.likesCount !== undefined) {
